@@ -1,5 +1,5 @@
 # Renzi et al. 202X
-Data and analysis for Renzi et al. 202X: **Nitrogen addition strengthens coral mutualisms, mitigating the negative effects of enrichment on coral health**, which we are currently submitting for peer review.
+Data and analysis for Renzi et al. 202X: (**Nitrogen addition strengthens coral mutualisms, mitigating the negative effects of enrichment on coral health**), which we are currently submitting for peer review.
 
 - `data` folder contains original data from the project
 - `figures` folder stores figure outputs from code in PDF format
