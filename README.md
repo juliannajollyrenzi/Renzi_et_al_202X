@@ -102,5 +102,40 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 * dflav_abundance: The abundance of *D. flavicaudus* on a coral at the end of 13 months (integer)
 * dflav_density_per_1000cm3: The abundance of *D. flavicaudus* on a coral at the end of 13 months divided by coral_vol_cm3 and multiplied by 1,000 (numeric)
 
+## File: physiology.csv
 
+*Change in proteins, carbohydrates, and endosymbiont densities for experimental corals after 13 months*
+
+**Description:** Change in protein content, change in carbohydrate content, and percent change in endosymbiont densities for experimental coral colonies, quantified from airbrushed coral tissue. Protein and carbohydrate content are calculated as a percentage of ash free dry weight. Change in protein and carbohydrate content is the protein/carbohydrate content for a coral at the end of the experiment minus the protein/carbohydrate content for that same coral at the start of the experiment. We quantified protein content using a Pierce BCA Protein Assay Kit with bovine serum albumin standard with 3 technical replicates for each sample and standard. We quantified carbohydrate content using a sulfuric acid incubation and glucose standards (Masuko et al. 2005, Baumann et al. 2021) with 3 technical replicates. We quantified endosymbiont densities using a Marienfled 0.100 mm hemocytometer using established methods (Becker et al. 2021), which we normalized to coral surface area to get the number of endosymbiont cells per square centimeter of tissue. Coral surface area was calculated using standard wax dipping techniques. Percent change of endosymbiont densities was calculated as the endosymbiont density at the end of the experiment minus the density at the start of the experiment divided by the density at the start of the experiment.
+
+Note: During data exploration we found that carbohydrate and protein content were linearly correlated with the surface area of the coral fragment. To deal with this correlation, we estimated the relationship between these metrics and fragment surface area in initial samples and subtracted the product of the slope of the line and fragment size from estimates to de-trend any effect of fragment size. The values in this file represent these adjusted values.
+
+#### Variables
+
+* coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
+* protein_change: The difference between the final and starting protein content of a coral colony (numeric)
+* carb_change: The difference between the final and starting carbohydrate content of a coral colony (numeric)
+* endosym_percent_change: The percent change in endosymbiont density over the course of the experiment (numeric)
+
+## File: water_nutrients.csv
+
+*Nitrogen concentration of water near diffusers versus controls*
+
+**Description:** We measured the water near nutrient diffusers and near colonies without nutrient diffusers to quantify whether diffusers were enriching the local seawater. To this end, we collected 60 mL of seawater near 10 randomly chosen colonies with diffusers or near 10 randomly chosen colonies without diffusers. Samples were then filtered (GF/F) into sterile tubes, frozen, and analyzed at the University of California Marine Science Analytical Laboratory. We sampled water 4 days after refreshing nutrients and 1 month afterwards.
+
+#### Variables
+
+* coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
+* timepoint: Whether the water sample is from 4 days (timepoint = 1) or 1 month (timepoint = 2) after nutrients addition (integer/factor)
+* nitrite_nitrate_umol: Concentration of nitrate + nitrite in seawater in µmol (numeric)
+* nitrite_nitrate_belowlimit: Whether the sample was below the analytical detection threshold (0.20 µmol; Y = below the limit, N = not below the limit) (string)
+
+
+### Citations
+
+Baumann, J. H., C. B. Bove, L. Carne, I. Gutierrez, and K. D. Castillo (2021). Two offshore coral species show greater acclimatization capacity to environmental variation than nearshore counterparts in southern Belize. Coral Reefs 40:1181–1194. DOI: 10.1007/s00338-021-02124-8
+
+Becker, D. M., H. M. Putnam, D. E. Burkepile, T. C. Adam, R. Vega Thurber, and N. J. Silbiger (2021). Chronic low-level nutrient enrichment benefits coral thermal performance in a fore reef habitat. Coral Reefs 40:1637–1655. DOI: 10.1007/s00338-021-02155-1
+
+Masuko, T., A. Minami, N. Iwasaki, T. Majima, S.-I. Nishimura, and Y. C. Lee (2005). Carbohydrate analysis by a phenol–sulfuric acid method in microplate format. Analytical Biochemistry 339:69–72. DOI: 10.1016/j.ab.2004.12.001
 
