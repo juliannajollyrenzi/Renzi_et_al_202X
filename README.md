@@ -7,7 +7,7 @@ Data and analysis for Renzi et al. 202X (*Nitrogen addition strengthens coral mu
 - `R` folder holds all annotated R code (in R-markdown format) used for analyses and figure creation
 - `images` folder holds images that were not generated from data 
 
-# Permanent data availability
+## Permanent data availability
 
 Upon acceptance, all data will be permanently available on EDI and all code will be published on Zenodo. We will update associated links here when that time comes.
 
