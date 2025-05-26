@@ -9,7 +9,7 @@ Data and analysis for Renzi et al. 202X (*Nitrogen addition strengthens coral mu
 
 # Permanent data availability
 
-Upon acceptance, all data will be permanently available on EDI and all code will be published on Zenodo.
+Upon acceptance, all data will be permanently available on EDI and all code will be published on Zenodo. We will update associated links here when that time comes.
 
 ## Description of the data and file structure
 
