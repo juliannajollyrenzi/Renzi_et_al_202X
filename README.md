@@ -39,7 +39,7 @@ This dataset contains the data and code required to replicate analyses in Renzi 
 
 All corals were cleared of exosymbionts before the start of the experiment. Nutrient treatments consisted of 200 g of polymer-coated potassium nitrate (Multicote 12-0-44, Haifa Chemicals Ltd), which we refreshed every ~3 months. Water samples taken near diffusers confirmed the water coming out of diffusers were enriched. Crab treatments were not maintained and if crabs left colonies they were not replaced. Coral colonies (represented in the dataset using coral_ids 1-40) were blocked so that blocks ran perpendicular to the net flow direction to account for any recruitment shadows. Each block contained all 4 treatments in a random order (see schematic below, with rectangles representing a coral colony in a given treatment).
 
-![ Alt text](./images/experimental_layout.jpeg)
+![ Alt text](./images/experimental_layout.jpg)
 
 
 EXPERIMENTAL SETUP
