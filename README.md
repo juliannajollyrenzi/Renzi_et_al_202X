@@ -23,6 +23,7 @@ All data are stored in the data folder and all scripts are stored in the R folde
 Name: Julianna Renzi
 Institution: University of California, Santa Barbara
 Email: jrenzi@ucsb.edu
+Backup email: julianna.renzi@gmail.com
 ```
 
 ## Dataset Overview
