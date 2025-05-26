@@ -28,7 +28,7 @@ Backup email: julianna.renzi@gmail.com
 
 ## Dataset Overview
 
-This dataset contains the data and code required to replicate analyses in Renzi et al. (in prep). This dataset was collected as part of a 13-month long experiment in Moorea, French Polynesia examining the effects of nutrient enrichment on coral mutualists and coral health, which ran from 2021-2022. In the experiment we exposed 40 *Pocillopora* coral colonies (~20 cm diameter) to one of four treatments:
+This dataset contains the data and code required to replicate analyses in Renzi et al. (in prep). This dataset was collected as part of a 13-month long experiment in Moorea, French Polynesia examining the effects of nutrient enrichment on coral mutualists and coral health, which ran from 2021-2022. In the experiment we exposed *Pocillopora* coral colonies (~20 cm diameter) to one of four treatments:
 
 | Treatment        | Description           | Number of coral colonies  |
 | ------------- |:-------------:| -----:|
