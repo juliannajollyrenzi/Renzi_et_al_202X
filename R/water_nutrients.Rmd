@@ -1,0 +1,153 @@
+---
+title: "Water nutrient differences between treatments"
+output: html_document
+date: "2025-05-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r clear environment}
+# clear environment for maximum reproducibility
+rm(list=ls())
+```
+
+```{r load packages}
+# load librarian (package for installing/loading packages)
+if (!require("librarian")) install.packages("librarian")
+
+# load requried packages
+librarian::shelf(here, # relative file paths 
+                 tidyverse, # data wrangling
+                 BlakeRMills/MoMAColors # color palette
+                 )
+```
+
+```{r explicitly assign functions if needed}
+# make sure correct functions attached to the correct packages
+summarize <- dplyr::summarize
+group_by <- dplyr::group_by
+select <- dplyr::select
+```
+
+# Set the color palette and graphics
+
+```{r consistent color palette by treatment}
+colorz <- moma.colors("Warhol", n=15, type="discrete")
+b.color <- colorz[3]
+control.color <- colorz[9]
+crab.color <- colorz[1]
+n.color <- colorz[6]
+```
+
+```{r set graphing theme}
+# ggplot theme
+theme_set(
+  theme_bw(base_size = 20) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    theme(text = element_text(size=20)) +
+    theme(plot.title = element_text(vjust = -6))
+) 
+```
+
+# Read in data
+
+```{r load data}
+water <- read_csv(here("data", "water_nutrients.csv"))
+
+metadata <- read_csv(here("data", "metadata.csv"))
+```
+
+# Plot
+
+```{r join with metadata}
+water %>% 
+  inner_join(metadata) %>% 
+  # replace detection limit with 0.10
+  mutate(nitrite_nitrate_umol = case_when(nitrite_nitrate_belowlimit == "Y" ~ 0.1, 
+                                          TRUE ~ nitrite_nitrate_umol)) -> water_nutrients
+```
+
+```{r plot}
+pdf(here("figures", "water_nutrients.pdf"), height = 4.5, width = 6.5)
+
+water_nutrients %>% 
+  # get column names/values nice for plotting
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>% 
+  mutate(timepoint = case_when(timepoint == "1" ~ "4 days",
+                               timepoint == "2" ~ "1 month",
+                               TRUE ~ "ALERT")) %>% 
+  mutate(timepoint = factor(timepoint, levels = c("4 days", "1 month"))) %>% 
+  ggplot(aes(x = as.factor(timepoint), y = nitrite_nitrate_umol, fill = Nutrients)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) +
+  geom_point(aes(color = Nutrients),
+             size = 2.2, alpha = 0.5,
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_fill_manual(values = c(b.color, n.color)) +
+  scale_color_manual(values = c(b.color, "black")) +
+  xlab("") +
+  ylab(expression(paste("Nitrite + Nitrate (", mu, "mol)"))) +
+  theme(text = element_text(size=20), 
+        panel.border = element_rect(color="black", size=2.3, linetype="solid"),
+        legend.position = "top")
+
+dev.off()
+```
+
+# Model
+
+```{r break up data by sampling time}
+water_nutrients %>% 
+  filter(timepoint == 1) -> four_days
+
+water_nutrients %>% 
+  filter(timepoint == 2) -> one_month
+```
+
+Variances are very unequal, so will use a Welch's t test
+
+```{r Welch's t-test - 4 days}
+var.test(log(nitrite_nitrate_umol) ~ nutrients, data = four_days)
+
+# test normality: nutrients
+qqnorm(log(four_days$nitrite_nitrate_umol[four_days$nutrients == "Y"]), pch = 1, frame = FALSE)
+qqline(log(four_days$nitrite_nitrate_umol[four_days$nutrients == "Y"]), col = "steelblue", lwd = 2)
+
+# test normality: ambient
+qqnorm(log(four_days$nitrite_nitrate_umol[four_days$nutrients == "N"]), pch = 1, frame = FALSE)
+qqline(log(four_days$nitrite_nitrate_umol[four_days$nutrients == "N"]), col = "steelblue", lwd = 2)
+
+
+# run test on trasnformed data
+t.test(log(nitrite_nitrate_umol) ~ nutrients, 
+       var.equal = FALSE, 
+       data = four_days)
+```
+
+Same for one month
+
+```{r Welch's t-test - 1 month}
+var.test(nitrite_nitrate_umol ~ nutrients, data = one_month)
+
+# test normality: nutrients
+qqnorm(one_month$nitrite_nitrate_umol[one_month$nutrients == "Y"], pch = 1, frame = FALSE)
+qqline(one_month$nitrite_nitrate_umol[one_month$nutrients == "Y"], col = "steelblue", lwd = 2)
+
+# test normality: ambient
+qqnorm(one_month$nitrite_nitrate_umol[one_month$nutrients == "N"], pch = 1, frame = FALSE)
+qqline(one_month$nitrite_nitrate_umol[one_month$nutrients == "N"], col = "steelblue", lwd = 2)
+
+
+# run test on one month data
+t.test(nitrite_nitrate_umol ~ nutrients, 
+       var.equal = FALSE, 
+       data = one_month)
+```
+

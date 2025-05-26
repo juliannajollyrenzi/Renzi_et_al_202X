@@ -1,0 +1,285 @@
+---
+title: 'Analysis: Exosymbiont communities'
+output: html_document
+date: "2025-05-25"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r clear environment}
+# clear environment for maximum reproducibility
+rm(list=ls())
+```
+
+```{r load packages}
+# load librarian (package for installing/loading packages)
+if (!require("librarian")) install.packages("librarian")
+
+# load requried packages
+librarian::shelf(here, # relative file paths 
+                 tidyverse, # data wrangling
+                 BlakeRMills/MoMAColors, # color palette
+                 vegan, # community/diversity analyses
+                 patchwork, # joining figures together
+                 glmmTMB, # linear models
+                 car, # type II ANOVA
+                 performance, # for residual exploration: normality of residuals, dispersion, etc.
+                 DHARMa # for residual/model fit exploration
+                 )
+```
+
+```{r explicitly assign functions if needed}
+# make sure correct functions attached to the correct packages
+summarize <- dplyr::summarize
+group_by <- dplyr::group_by
+select <- dplyr::select
+```
+
+```{r set seed}
+set.seed(0429)
+```
+
+# Set the color palette and graphics
+
+```{r consistent color palette by treatment}
+colorz <- moma.colors("Warhol", n=15, type="discrete")
+b.color <- colorz[3]
+control.color <- colorz[9]
+crab.color <- colorz[1]
+n.color <- colorz[6]
+```
+
+```{r set graphing theme}
+# ggplot theme
+theme_set(
+  theme_bw(base_size = 20) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    theme(plot.title = element_text(vjust = -6))
+) 
+```
+
+# Read in data
+
+```{r}
+exosym <- read_csv(here("data", "exosymbionts.csv")) %>% 
+  # exclude the coral that experienced 100% tissue loss
+  filter(coral_id != 25)
+
+metadata <- read_csv(here("data", "metadata.csv")) %>% 
+  filter(coral_id != 25)
+```
+
+# Get overall taxa abundances
+
+For supplemental table describing taxa groups
+
+```{r}
+exosym %>% 
+  group_by(taxa_group) %>% 
+  summarize(abundance = sum(abundance)) %>% 
+  arrange(-abundance) %>% 
+  write_csv(here("tables", "supplemental_taxa_table.csv"))
+```
+
+# Create a taxa matrix
+
+Want to pivot this into long format and fill NA's with zeros where no taxa groups were observed
+
+```{r}
+exosym %>% 
+  pivot_wider(names_from = taxa_group,
+              values_from = abundance,
+              values_fill = 0) -> taxa_mat_1
+```
+
+# Calculate diversity metrics
+
+Make a dataframe for diversity metrics
+
+```{r}
+taxa_diversity_1 <- taxa_mat_1
+```
+
+```{r use vegan functions}
+taxa_diversity_1$richness <- specnumber(taxa_mat_1[,-1])
+taxa_diversity_1$shannon <- diversity(taxa_mat_1[,-1], index = "shannon")
+taxa_diversity_1$evenness <- taxa_diversity_1$shannon/log(taxa_diversity_1$richness)
+```
+
+Add in metadata
+
+```{r}
+taxa_diversity_1 %>% 
+  inner_join(metadata) %>% 
+  # get column names/values nice for plotting
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>%
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) -> taxa_diversity_2
+```
+
+# Examine richness differences
+
+Richness plot
+
+```{r plot}
+taxa_diversity_2 %>% 
+  ggplot(aes(x = Nutrients, y = richness, fill = Crab)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) + 
+  geom_point(size = 2.2,
+             color = "black",
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  ylab("Richness") +
+  scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", fill = NA, size = 2.3),
+        legend.position = "none") -> rich.plt
+```
+
+## Model
+
+```{r model}
+m.rich.1 <- glmmTMB(richness ~ crab + nutrients + crab:nutrients + (1|block),
+                    family = poisson(),
+                    data = taxa_diversity_2)
+```
+
+```{r test assumptions}
+resid.m.rich.1 <- DHARMa::simulateResiduals(m.rich.1)
+
+testResiduals(resid.m.rich.1, plot = T)
+testDispersion(resid.m.rich.1)
+testZeroInflation(resid.m.rich.1)
+testQuantiles(resid.m.rich.1, plot = T) 
+check_model(m.rich.1)
+```
+
+Examine results
+
+```{r examine results}
+car::Anova(m.rich.1) 
+```
+
+# Evenness
+
+```{r plot}
+taxa_diversity_2 %>% 
+  ggplot(aes(x = Nutrients, y = evenness, fill = Crab)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) + 
+  geom_point(size = 2.2,
+             color = "black",
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) +
+  ylab("Evenness") + 
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", size=2.3),
+        legend.position = "none") -> even.plt
+```
+
+## Model
+
+```{r first model}
+m.even.1 <- glmmTMB((evenness) ~ crab + nutrients + crab:nutrients  + (1|block),
+                  family = Gamma(link = "log"),
+                  data = taxa_diversity_2)
+```
+
+```{r test assumptions}
+resid.m.even.1 <- DHARMa::simulateResiduals(m.even.1)
+
+testResiduals(resid.m.even.1, plot = T)
+testDispersion(resid.m.even.1)
+testZeroInflation(resid.m.even.1)
+testQuantiles(resid.m.even.1, plot = T) 
+check_model(m.even.1)
+```
+
+```{r examine results}
+car::Anova(m.even.1) 
+```
+
+# Beta diversity
+
+Calculate Bray Curtis distances
+
+```{r calculate distances}
+bray_mat <- vegdist(taxa_mat_1[,-1], "bray") # 1 is maximum dissimilarity
+```
+
+Make sure key aligns
+
+```{r}
+unique(taxa_mat_1[,1] == metadata[,1])
+```
+
+Calculate dispersion 
+
+```{r calculate beta dispersion}
+betaDisper<- vegan::betadisper(bray_mat, metadata$treatment) 
+
+# are groups a good predictor of dispersion?
+anova(betaDisper) # no
+
+# plot of dispersion test
+plot(betaDisper, sub = "") 
+boxplot(betaDisper, main = "Treatment", xlab = "") 
+```
+
+Plot by hand. Get distances:
+
+```{r}
+metadata$distance_centriod <- betaDisper$distances
+```
+
+Plot
+
+```{r}
+metadata %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>%
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  ggplot(aes(x = Nutrients, y = distance_centriod, fill = Crab)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) + 
+  geom_point(size = 2.2,
+             color = "black",
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  ylab("Distance to centroid") +
+  scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) + 
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", size=2.3)) -> beta.plt
+```
+
+## PERMANOVA
+
+```{r}
+adonis2(taxa_mat_1 ~ crab + nutrients + crab:nutrients, 
+        strata = metadata$block, 
+        data = metadata, 
+        method = "bray",
+        perm = 10000)
+```
+
+## Plot all together
+
+```{r}
+pdf(here("figures", "evenness_and_richness.pdf"), height = 9.5, width = 13)
+
+(rich.plt + even.plt) / beta.plt + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
+                            tag_suffix = ')')
+
+dev.off()
+```

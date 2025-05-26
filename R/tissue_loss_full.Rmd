@@ -1,0 +1,132 @@
+---
+title: "Extended tissue loss model with exosymbionts"
+output: html_document
+date: "2025-05-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r clear environment}
+# clear environment for maximum reproducibility
+rm(list=ls())
+```
+
+```{r load packages}
+# load librarian (package for installing/loading packages)
+if (!require("librarian")) install.packages("librarian")
+
+# load requried packages
+librarian::shelf(here, # relative file paths 
+                 tidyverse, # data wrangling
+                 BlakeRMills/MoMAColors, # color palette
+                 car, # type II Anova for comparing model terms
+                 glmmTMB, # modeling
+                 DHARMa, # for residual exploration: normality of residuals, dispersion, etc.
+                 patchwork, # for putting figures together
+                 performance # model residuals
+                 )
+```
+
+```{r explicitly assign functions if needed}
+# make sure correct functions attached to the correct packages
+summarize <- dplyr::summarize
+group_by <- dplyr::group_by
+select <- dplyr::select
+```
+
+```{r set seed}
+set.seed(0429)
+```
+
+# Set the color palette and graphics
+
+```{r consistent color palette by treatment}
+colorz <- moma.colors("Warhol", n=15, type="discrete")
+b.color <- colorz[3]
+control.color <- colorz[9]
+crab.color <- colorz[1]
+n.color <- colorz[6]
+```
+
+```{r set graphing theme}
+# ggplot theme
+theme_set(
+  theme_bw(base_size = 20) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    theme(text = element_text(size=20)) 
+) 
+```
+
+# Read in data
+
+```{r load data}
+physiology_1 <- read_csv(here("data", "physiology.csv"))
+
+metadata <- read_csv(here("data", "metadata.csv")) 
+```
+
+# Make model
+
+Join dataframes
+
+```{r}
+metadata %>% 
+  inner_join(physiology_1) -> physiology_2
+```
+
+Create binomial GLMM
+
+```{r model}
+m.tl.full.1 <- glmmTMB(tissue_loss_binary ~ crab + nutrients + crab:nutrients + dflav_density_per_1000cm3 + gmono_density_per_1000cm3 + endosym_percent_change, 
+                  family = binomial(link = "logit"),
+                  data = physiology_2)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.tl.full.1 <- DHARMa::simulateResiduals(m.tl.full.1)
+
+testResiduals(resid.m.tl.full.1, plot = T)
+testDispersion(resid.m.tl.full.1)
+testZeroInflation(resid.m.tl.full.1)
+testQuantiles(resid.m.tl.full.1, plot = T) 
+check_model(m.tl.full.1)
+```
+
+```{r examine results}
+car::Anova(m.tl.full.1) 
+```
+
+# Plot D. flavicaudus across treatments
+
+```{r}
+pdf(here("figures/tissue_loss_dflav.pdf"), height = 5, width = 8)
+
+metadata %>% 
+  # clean up values for plotting
+  mutate(tissue_loss_binary = case_when(tissue_loss_binary == 1 ~ "Tissue loss",
+                                        tissue_loss_binary == 0 ~ "No tissue loss")) %>% 
+  ggplot(aes(y = as.factor(tissue_loss_binary), x = dflav_density_per_1000cm3, group = tissue_loss_binary)) + 
+  geom_boxplot(size = 1, 
+               outlier.shape = NA) +
+  geom_point(aes(color = treatment),
+             size = 2.2,
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_color_manual(name = "Treatment",
+                     values = c("Both" = b.color, "Nutrient" = n.color,
+                                "Crab" = crab.color, "Control" = control.color)) +
+  ylab("") +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", size = 2.3),
+        legend.position = "top") +
+  xlab(expression(paste(italic("D. flavicaudus"), "/1000", cm^3))) 
+
+
+dev.off()
+```
+
+

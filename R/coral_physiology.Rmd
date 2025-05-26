@@ -1,0 +1,284 @@
+---
+title: "Coral physiology"
+output: html_document
+date: "2025-05-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r clear environment}
+# clear environment for maximum reproducibility
+rm(list=ls())
+```
+
+```{r load packages}
+# load librarian (package for installing/loading packages)
+if (!require("librarian")) install.packages("librarian")
+
+# load requried packages
+librarian::shelf(here, # relative file paths 
+                 tidyverse, # data wrangling
+                 BlakeRMills/MoMAColors, # color palette
+                 car, # type II Anova for comparing model terms
+                 glmmTMB, # modeling
+                 DHARMa, # for residual exploration: normality of residuals, dispersion, etc.
+                 patchwork, # for putting figures together
+                 performance # model residuals
+                 )
+```
+
+```{r explicitly assign functions if needed}
+# make sure correct functions attached to the correct packages
+summarize <- dplyr::summarize
+group_by <- dplyr::group_by
+select <- dplyr::select
+```
+
+```{r set seed}
+set.seed(0429)
+```
+
+# Set the color palette and graphics
+
+```{r consistent color palette by treatment}
+colorz <- moma.colors("Warhol", n=15, type="discrete")
+b.color <- colorz[3]
+control.color <- colorz[9]
+crab.color <- colorz[1]
+n.color <- colorz[6]
+```
+
+```{r set graphing theme}
+# ggplot theme
+theme_set(
+  theme_bw(base_size = 20) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    theme(text = element_text(size=20)) 
+) 
+```
+
+# Read in data
+
+```{r load data}
+physiology_1 <- read_csv(here("data", "physiology.csv"))
+
+metadata <- read_csv(here("data", "metadata.csv")) 
+```
+
+# Protein change
+
+First, join the physiology data with the metadata 
+
+```{r join with metadata}
+physiology_1 %>% 
+  # use an inner join because don't want to include coral #25 (experienced full mortality)
+  inner_join(metadata) %>% 
+  # make nice columns for plotting
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) -> physiology_2
+```
+
+Then, plot differences among treatments
+
+```{r plot}
+physiology_2 %>% 
+  ggplot(aes(x = Crab, y = protein_change, fill = Nutrients)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) +
+  geom_point(size = 2.2,
+             color = "black",
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_fill_manual(values = c(b.color, n.color)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("") +
+  ylab(expression(paste(Delta, " Protein (%)"))) +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", fill = NA, size = 2.3),
+        legend.position = "none") -> protein.plt
+```
+
+## Model
+
+```{r make model}
+m.prot.1 <- glmmTMB(protein_change ~ crab + nutrients + crab:nutrients + (1|block), 
+                  family = gaussian("identity"),
+                  data = physiology_2)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.prot.1 <- DHARMa::simulateResiduals(m.prot.1)
+
+testResiduals(resid.m.prot.1, plot = T)
+testDispersion(resid.m.prot.1)
+testZeroInflation(resid.m.prot.1)
+testQuantiles(resid.m.prot.1, plot = T) 
+check_model(m.prot.1)
+```
+
+```{r examine results}
+car::Anova(m.prot.1) 
+```
+
+# Carbohydrate change
+
+Plot differences among treatments
+
+```{r plot}
+physiology_2 %>% 
+  ggplot(aes(x = Crab, y = carb_change, fill = Nutrients)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) +
+  geom_point(size = 2.2,
+             color = "black",
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_fill_manual(values = c(b.color, n.color)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("") +
+  ylab(expression(paste(Delta, " Carbohydrate (%)"))) +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", fill = NA, size = 2.3),
+        legend.position = "none") -> carb.plt
+```
+
+## Model
+
+```{r make model}
+m.carb.1 <- glmmTMB(carb_change ~ crab + nutrients + crab:nutrients + (1|block), 
+                  family = gaussian(),
+                  data = physiology_2)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.carb.1 <- DHARMa::simulateResiduals(m.carb.1)
+
+testResiduals(resid.m.carb.1, plot = T)
+testDispersion(resid.m.carb.1)
+testZeroInflation(resid.m.carb.1)
+testQuantiles(resid.m.carb.1, plot = T) 
+check_model(m.carb.1)
+```
+
+```{r examine results}
+car::Anova(m.carb.1)
+```
+
+# Tissue loss
+
+First, plot:
+
+```{r plot}
+# use metadata because want to include coral #25
+metadata %>% 
+  # get column names/values nice for plotting
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>% 
+  ggplot(aes(x = Crab, y = tissue_loss_5_percent, fill = Nutrients)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) +
+  geom_point(size = 2.2,
+             color = "black",
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_fill_manual(values = c(b.color, n.color)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("") +
+  ylab("Tissue loss (%)") +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", fill = NA, size = 2.3),
+        legend.position = "none") -> tl.plt
+```
+
+## Model: binary
+
+```{r}
+m.tl.1 <- glmmTMB(tissue_loss_binary ~ crab + nutrients + crab:nutrients + (1|block), 
+                  family = binomial(link = "logit"),
+                  data = metadata)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.tl.1 <- DHARMa::simulateResiduals(m.tl.1)
+
+testResiduals(resid.m.tl.1, plot = T)
+testDispersion(resid.m.tl.1)
+testZeroInflation(resid.m.tl.1)
+testQuantiles(resid.m.tl.1, plot = T) 
+check_model(m.tl.1)
+```
+
+```{r examine results}
+car::Anova(m.tl.1) 
+```
+
+# Endosymbionts
+
+First plot
+
+```{r}
+physiology_2 %>% 
+  ggplot(aes(x = Crab, y = endosym_percent_change, fill = Nutrients)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) +
+  geom_point(size = 2.2,
+             color = "black",
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_fill_manual(values = c(b.color, n.color)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("") +
+  ylab(expression(paste("%", Delta, " Endosymbiont densities"))) +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", fill = NA, size = 2.3)) -> endo.plt
+```
+
+## Model 
+
+```{r make model}
+m.endo.1 <- glmmTMB(endosym_percent_change ~ crab + nutrients + crab:nutrients + (1|block), 
+                  family = gaussian(link = "identity"),
+                  data = physiology_2)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.endo.1 <- DHARMa::simulateResiduals(m.endo.1)
+
+testResiduals(resid.m.endo.1, plot = T)
+testDispersion(resid.m.endo.1)
+testZeroInflation(resid.m.endo.1)
+testQuantiles(resid.m.endo.1, plot = T) 
+check_model(m.endo.1)
+```
+
+```{r examine results}
+car::Anova(m.endo.1)
+```
+
+# Plot all together
+
+```{r}
+pdf(here("figures/physiology_change_plots.pdf"), height = 9, width = 14)
+
+(protein.plt + carb.plt) / (tl.plt + endo.plt) + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
+                            tag_suffix = ')')
+
+dev.off()
+```
+
+
+

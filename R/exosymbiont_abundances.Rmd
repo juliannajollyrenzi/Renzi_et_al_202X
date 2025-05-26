@@ -1,0 +1,344 @@
+---
+title: 'Analysis: Exosymbiont abundances'
+output: html_document
+date: "2025-05-26"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r clear environment}
+# clear environment for maximum reproducibility
+rm(list=ls())
+```
+
+```{r load packages}
+# load librarian (package for installing/loading packages)
+if (!require("librarian")) install.packages("librarian")
+
+# load requried packages
+librarian::shelf(here, # relative file paths 
+                 tidyverse, # data wrangling
+                 BlakeRMills/MoMAColors, # color palette
+                 car, # type II Anova for comparing model terms
+                 glmmTMB, # modeling
+                 DHARMa, # for residual exploration: normality of residuals, dispersion, etc.
+                 patchwork, # for putting figures together
+                 performance, # for check homogeneity
+                 emmeans # for contrasts
+                 )
+```
+
+```{r explicitly assign functions if needed}
+# make sure correct functions attached to the correct packages
+summarize <- dplyr::summarize
+group_by <- dplyr::group_by
+select <- dplyr::select
+```
+
+```{r set seed}
+set.seed(0429)
+```
+
+# Set the color palette and graphics
+
+```{r consistent color palette by treatment}
+colorz <- moma.colors("Warhol", n=15, type="discrete")
+b.color <- colorz[3]
+control.color <- colorz[9]
+crab.color <- colorz[1]
+n.color <- colorz[6]
+```
+
+```{r set graphing theme}
+# ggplot theme
+theme_set(
+  theme_bw(base_size = 20) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    theme(text = element_text(size=20)) 
+) 
+```
+
+# Read in data
+
+```{r load data}
+# full exosymbiont count data
+exosym <- read_csv(here("data", "exosymbionts.csv")) %>% 
+  # exclude coral that experienced 100% tissue loss
+  filter(coral_id != 25)
+
+# metadata (treatments, block, coral volume, etc.)
+metadata <- read_csv(here("data", "metadata.csv")) %>% 
+  # exclude coral that experienced 100% tissue loss
+  filter(coral_id != 25) %>% 
+  # get column names/values nice for plotting
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab"))
+```
+
+# Volume differences
+
+We want to: 
+1. Make sure there are no differences in volume among treatments 
+2. Examine the effect of coral volume on total exosymbiont abundance
+
+For that, first we need to calculate the total number of exosymbionts per colony and then join that information with our metadata on coral volume 
+
+```{r get total macrosymbionts per colony and join metadata}
+exosym %>% 
+  group_by(coral_id) %>% 
+  summarize(abundance = sum(abundance)) %>% 
+  full_join(metadata) %>% 
+  mutate(density_cm3 = abundance/coral_vol_cm3,
+         density_1000cm3 = 1000*abundance/coral_vol_cm3) -> total_abund
+```
+
+## Model
+
+```{r test volume differences}
+m.vol <- glmmTMB(coral_vol_cm3 ~ treatment + (1|block), 
+                    family = Gamma(link = "log"), 
+                    data = total_abund) 
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.vol <- DHARMa::simulateResiduals(m.vol)
+
+testResiduals(resid.m.vol, plot = T)
+testQuantiles(resid.m.vol, plot = T)
+check_homogeneity(m.vol)
+check_model(m.vol)
+```
+
+```{r examine results}
+car::Anova(m.vol) 
+```
+
+# Macrosymbiont densities
+
+First, some overall summary statistics for the results section
+
+```{r range of macrosymbionts per coral}
+# total number of macrosymbionts counted, mean, and standard deviation
+total_abund %>% 
+  summarize(total_abundance = sum(abundance),
+            mean_abundance = mean(abundance),
+            sd_abundance = sd(abundance),
+            N = n(),
+            se_abundance = sd_abundance/sqrt(N)
+            ) 
+```
+
+Visually examine differences in density
+
+```{r plot total abundance differences}
+pdf(here("figures", "total_macrosymbiont_density.pdf"), height = 5, width = 9)
+
+total_abund %>% 
+  # get column names/values nice for plotting
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>% 
+  # plot
+  ggplot(aes(x = Nutrients, y = density_1000cm3, fill = Crab)) +
+  geom_boxplot(size = 1,
+               outlier.shape = NA) + 
+  geom_point(size = 2.2,
+             color = "black",
+             position = position_jitterdodge(jitter.width = 0.1,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", size=2.3)) +
+  ylab(expression(paste("Exosymbiont abundance/1000", cm^3))) +
+  xlab("")
+
+dev.off()
+```
+
+## Model
+
+```{r tweedie}
+m.abund.1 <- glmmTMB(density_1000cm3 ~ crab + nutrients + crab:nutrients + (1|block), 
+                           family = tweedie(link = "log"),
+                           data = total_abund)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.abund.1 <- DHARMa::simulateResiduals(m.abund.1)
+
+testResiduals(resid.m.abund.1, plot = T)
+testDispersion(resid.m.abund.1)
+testZeroInflation(resid.m.abund.1)
+testQuantiles(resid.m.abund.1, plot = T) 
+check_model(m.abund.1)
+```
+
+```{r examine results}
+car::Anova(m.abund.1)
+```
+
+# A mutualist: D. flavicaudus
+
+## Model
+
+```{r D. flav ~ treatments}
+m.dflav.1 <- glmmTMB(dflav_density_per_1000cm3 ~ crab + nutrients + crab:nutrients + (1|block), 
+                     family =  tweedie(link = "log"),
+                     data = metadata)
+```
+
+```{r test assumptions}
+# get residuals
+resid.dflav.1 <- DHARMa::simulateResiduals(m.dflav.1)
+
+testResiduals(resid.dflav.1, plot = T)
+testDispersion(resid.dflav.1)
+testZeroInflation(resid.dflav.1)
+testQuantiles(resid.dflav.1, plot = T) 
+check_model(m.dflav.1)
+```
+
+```{r examine results}
+car::Anova(m.dflav.1)
+```
+
+```{r}
+summary(m.dflav.1)
+```
+
+Get magnitude of nutrient effect:
+
+```{r}
+summary(emmeans::emmeans(m.dflav.1, pairwise ~ nutrients), type = "response")$emmeans 
+```
+
+## Plot
+
+First, get contrasts for nutrients, which was a significant predictor of variation:
+
+```{r}
+emm.dflav <- as_tibble(summary(emmeans::emmeans(m.dflav.1, pairwise ~ nutrients), type = "response")$emmeans) 
+```
+
+
+```{r}
+emm.dflav %>% 
+  # get column names/values nice for plotting
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  # just for plotting purposees:
+  mutate(Crab = "No crab") %>% 
+  ggplot() +
+  geom_pointrange(aes(x = Nutrients, y = response,
+                      ymin = asymp.LCL, ymax = asymp.UCL), 
+                  size = 1.5, linewidth = 1.5, color = "black") +
+  # make a new color scale
+  ggnewscale::new_scale_color() +
+  geom_jitter(data = metadata,
+              aes(x = Nutrients, y = dflav_density_per_1000cm3, color = Crab), 
+              height = 0, width = 0.1, size = 2) +
+  scale_color_manual(values = c("No crab" = control.color, "Crab" = crab.color), 
+                     name = "") +
+  ylab(expression(paste("Predicted abundance/1000", cm^3))) +
+  xlab("Nutrient treatment") +
+  theme(legend.position = "top",
+        panel.border = element_rect(color="black", size=2.3)) +
+  xlab("") -> plt.dflav
+
+```
+
+# A parasite: G. monodonta
+
+## Model
+
+The Tweedie model has convergence problems, which is why we are using a Gamma family error distribution
+
+```{r}
+m.gmono.1 <- glmmTMB(gmono_density_per_1000cm3 ~ crab + nutrients + crab:nutrients + (1|block), 
+                     family = Gamma(link = "log"), 
+                     data = metadata) 
+```
+
+```{r test assumptions}
+# get residuals
+resid.gmono.1 <- DHARMa::simulateResiduals(m.gmono.1)
+
+testResiduals(resid.gmono.1, plot = T)
+testDispersion(resid.gmono.1)
+testZeroInflation(resid.gmono.1)
+testQuantiles(resid.gmono.1, plot = T) 
+check_model(m.gmono.1)
+```
+
+Looks all right. Check results
+
+```{r examine results}
+car::Anova(m.gmono.1)
+```
+
+Check magnitude of effect
+
+```{r}
+summary(emmeans::emmeans(m.gmono.1, pairwise ~ crab), type = "response")$emmeans
+```
+
+## Plot
+
+Get contrasts using emmeans
+
+```{r}
+emm.gmono <- as_tibble(summary(emmeans::emmeans(m.gmono.1, pairwise ~ crab), type = "response")$emmeans) 
+```
+
+
+Plot with raw data:
+
+```{r}
+emm.gmono %>%
+  # get column names/values nice for plotting
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>% 
+  # make a fake nutrients variable for plotting
+  mutate(Nutrients = "Enriched") %>% 
+  ggplot() +
+  geom_pointrange(aes(x = Crab, y = response,
+                      ymin = asymp.LCL, ymax = asymp.UCL), 
+                  color = "black", size = 1.5, linewidth = 1.5) +
+  # make a new color scale
+  ggnewscale::new_scale_color() +
+  geom_jitter(data = metadata,
+              aes(x = Crab, y = gmono_density_per_1000cm3, color = Nutrients),
+              height = 0, width = 0.1, size = 2) +
+  scale_color_manual(values = c("Ambient" = b.color, "Enriched" = n.color), 
+                     name = "") +
+  ylab(expression(paste("Predicted abundance/1000", cm^3))) +
+  xlab ("Crab treatment") +
+  theme(legend.position = "top",
+        panel.border = element_rect(color="black", size=2.3)) +
+  xlab("") -> plt.gmono
+```
+
+
+# Plot together
+
+```{r}
+pdf(here("figures", "parasite_mutualist_predictions.pdf"), height = 5.5, width = 10.5)
+
+plt.gmono + plt.dflav + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
+                            tag_suffix = ')')
+
+dev.off()
+```
+
+
+

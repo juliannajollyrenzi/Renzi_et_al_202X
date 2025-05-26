@@ -1,0 +1,324 @@
+---
+title: "Piecewise SEM protein and carb models"
+output: html_document
+date: "2025-05-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r clear environment}
+# clear environment for maximum reproducibility
+rm(list=ls())
+```
+
+```{r load packages}
+# load librarian (package for installing/loading packages)
+if (!require("librarian")) install.packages("librarian")
+
+# load requried packages
+librarian::shelf(here, # relative file paths 
+                 tidyverse, # data wrangling
+                 BlakeRMills/MoMAColors, # color palette
+                 piecewiseSEM, # structural equation modeling
+                 semEff, # indirect effect p-values
+                 glmmTMB,
+                 performance # check models
+                 )
+```
+
+```{r explicitly assign functions if needed}
+# make sure correct functions attached to the correct packages
+summarize <- dplyr::summarize
+group_by <- dplyr::group_by
+select <- dplyr::select
+```
+
+```{r set seed}
+set.seed(0429)
+```
+
+# Set the color palette and graphics
+
+```{r consistent color palette by treatment}
+colorz <- moma.colors("Warhol", n=15, type="discrete")
+
+b.color <- colorz[3]
+control.color <- colorz[9]
+crab.color <- colorz[1]
+n.color <- colorz[6]
+```
+
+```{r set graphing theme}
+# ggplot theme
+theme_set(
+  theme_bw(base_size = 20) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    theme(text = element_text(size=20)) 
+) 
+```
+
+# Read in data
+
+```{r}
+physiology_1 <- read_csv(here("cleaned_data", "physiology.csv"))
+metadata <- read_csv(here("cleaned_data", "metadata.csv"))
+```
+
+# Prepare data
+
+Clean, join, and scale data
+
+```{r}
+metadata %>% 
+  # join metadata and physiology data
+  inner_join(physiology_1) %>% 
+  # turn categories into indicators
+  mutate(crab = case_when(
+    crab == "Y" ~ 1,
+    crab == "N" ~ 0,
+    TRUE ~ -9999
+    )) %>% 
+  mutate(nutrients = case_when( 
+    nutrients == "Y" ~ 1,
+    nutrients == "N" ~ 0,
+    TRUE ~ -9999
+    )) %>% 
+  mutate(interaction = nutrients*crab) %>% 
+  # scale variables
+  mutate(protein_change_scale = scale(protein_change)[,1],
+         carb_change_scale = scale(carb_change)[,1],
+         endosym_change_scale = scale(endosym_percent_change)[,1],
+         dflav_density_scale = scale(dflav_density_per_1000cm3)[,1],
+         gmono_density_scale = scale(gmono_density_per_1000cm3)[,1]
+         ) -> scaled_data
+```
+
+# Make individual models
+
+First we'll fit individual models. Most will be shared between protein and carb models
+
+# Overall models
+
+D. flavicaudus model
+
+```{r D. flavicaudus model}
+m.dflav <- glm(dflav_density_scale ~ nutrients,
+               family = gaussian(link = "identity"),
+               data = scaled_data)
+```
+
+```{r check model}
+check_model(m.dflav)
+  # check normality of residuals manually:
+  qqnorm(m.dflav$residuals)
+  qqline(m.dflav$residuals)
+  check_normality(simulate_residuals(m.dflav))
+```
+
+G. monodonta model
+
+```{r G. monodonta model}
+m.gmono <- glm(gmono_density_scale ~ crab,
+               family = gaussian(link = "identity"),
+               data = scaled_data)
+```
+
+```{r check model}
+check_model(m.gmono)
+  # check normality of residuals manually:
+  qqnorm(m.gmono$residuals)
+  qqline(m.gmono$residuals)
+  check_normality(simulate_residuals(m.gmono))
+```
+
+Endosymbiont density model
+
+```{r endosymbiont model}
+m.endo <- glm(endosym_change_scale ~ nutrients,
+              family = gaussian(link = "identity"),
+              data = scaled_data)
+```
+
+```{r check model}
+check_model(m.endo)
+  # check normality of residuals manually:
+  qqnorm(m.endo$residuals)
+  qqline(m.endo$residuals)
+  check_normality(simulate_residuals(m.endo))
+```
+
+# Protein model
+
+```{r protein model}
+m.prot.health <- glm(protein_change_scale ~ nutrients + crab + interaction + endosym_change_scale + dflav_density_scale + gmono_density_scale,
+                     family = gaussian(link = "identity"),
+                     data = scaled_data)
+```
+
+```{r check model}
+check_model(m.prot.health)
+  qqnorm(m.prot.health$residuals)
+  qqline(m.prot.health$residuals)
+```
+
+Create pSEM
+
+```{r pSEM}
+sem.prot <- psem(
+  m.dflav, 
+  m.gmono, 
+  m.endo, 
+  m.prot.health,
+  data = as.data.frame(scaled_data)
+)
+```
+
+```{r summary}
+summary(sem.prot, conserve = TRUE)
+```
+
+**Notes on the summary output:**
+- For tests of directed separation, p-values > 0.05 means those paths are justified to exclude
+- Fischer's C statistic > 0.05 provides support for the hypothesized model structure
+
+## Estimate direct and indirect effects
+
+Use the `semEff` package to calculate effects via bootstrapping
+
+```{r bootstrap effects}
+# bootstrap and save standardized effects
+protein.sem.boot <- bootEff(sem.prot, R = 20000, 
+                            seed = 0429,
+                            parallel = "multicore") 
+
+# calculate direct, indirect, and total effects
+protein.sem.eff <- semEff(protein.sem.boot)
+```
+
+```{r examine paths}
+summary(protein.sem.eff, 
+        ci.conf = 0.95) # defaults to 95% CI and standardized, but just being thorough 
+```
+
+**Results**
+
+*Protein change*
+
+                                   Effect     Bias   Std. Err.   Lower CI Upper CI    
+                                   ------   ------   ---------   -------- --------    
+ DIRECT:    nutrients            | -0.347 |  0.017 |     0.131 |   -0.595   -0.092 | *
+            crab                 | -0.232 |  0.011 |     0.146 |   -0.485    0.088 |  
+            interaction          |  0.144 | -0.013 |     0.148 |   -0.168    0.410 |  
+            dflav.density.scale  |  0.449 | -0.020 |     0.133 |    0.171    0.675 | *
+            gmono.density.scale  | -0.253 |  0.026 |     0.140 |   -0.545   -0.002 | *
+            endosym.change.scale |  0.154 | -0.011 |     0.117 |   -0.052    0.411 |  
+                                 |        |        |           |                   |  
+ INDIRECT:  nutrients            |  0.298 | -0.016 |     0.086 |    0.148    0.490 | *
+            crab                 |  0.085 | -0.007 |     0.056 |    0.001    0.240 | *
+                                 |        |        |           |                   |  
+ TOTAL:     nutrients            | -0.049 |  0.001 |     0.130 |   -0.333    0.184 |  
+            crab                 | -0.147 |  0.003 |     0.156 |   -0.426    0.193 |  
+            interaction          |  0.144 | -0.013 |     0.148 |   -0.168    0.410 |  
+            dflav.density.scale  |  0.449 | -0.020 |     0.133 |    0.171    0.675 | *
+            gmono.density.scale  | -0.253 |  0.026 |     0.140 |   -0.545   -0.002 | *
+            endosym.change.scale |  0.154 | -0.011 |     0.117 |   -0.052    0.411 |  
+                                 |        |        |           |                   |  
+ MEDIATORS: dflav.density.scale  |  0.246 | -0.016 |     0.077 |    0.112    0.410 | *
+            gmono.density.scale  |  0.085 | -0.007 |     0.056 |    0.001    0.240 | *
+            endosym.change.scale |  0.052 |  0.000 |     0.050 |   -0.009    0.203 |  
+
+*D. flavicaudus*
+
+                        Effect     Bias   Std. Err.   Lower CI Upper CI    
+                        ------   ------   ---------   -------- --------    
+ DIRECT:    nutrients |  0.548 | -0.002 |     0.106 |    0.284    0.715 | *
+
+*G. monodonta*
+
+                   Effect     Bias   Std. Err.   Lower CI Upper CI    
+                   ------   ------   ---------   -------- --------    
+ DIRECT:    crab | -0.337 | -0.004 |     0.115 |   -0.524   -0.048 | *
+ 
+*Endosymbionts*
+ 
+                        Effect     Bias   Std. Err.   Lower CI Upper CI    
+                        ------   ------   ---------   -------- --------    
+ DIRECT:    nutrients |  0.336 | -0.001 |     0.139 |    0.008    0.566 | *
+
+
+# Carbohydrate model
+
+```{r make carbohydrate model}
+m.carb.health <- glm(carb_change_scale ~ nutrients + crab + interaction + endosym_change_scale + dflav_density_scale + gmono_density_scale,
+                     data = scaled_data)
+```
+
+```{r examine results}
+check_model(m.carb.health)
+  qqnorm(m.carb.health$residuals)
+  qqline(m.carb.health$residuals)
+```
+
+```{r build pSEM}
+sem.carb <- psem(
+  m.dflav, 
+  m.gmono, 
+  m.endo, 
+  m.carb.health,
+  data = as.data.frame(scaled_data)
+)
+```
+
+```{r examine fit}
+summary(sem.carb, conserve = TRUE)
+```
+
+## Estimate direct and indirect effects
+
+Use the `semEff` package to calculate effects via bootstrapping
+
+```{r bootstrap effects}
+# bootstrap and save standardized effects
+carb.sem.boot <- bootEff(sem.carb, R = 20000, 
+                         seed = 0429) 
+
+# calculate direct, indirect, and total effects
+carb.sem.eff <- semEff(carb.sem.boot)
+```
+
+```{r examine paths}
+summary(carb.sem.eff, 
+        ci.conf = 0.95) # defaults to 95% CI and standardized, but just being thorough 
+```
+
+**Results**
+
+*Carbohydrate change*
+
+                                   Effect     Bias   Std. Err.   Lower CI Upper CI  
+                                   ------   ------   ---------   -------- --------  
+ DIRECT:    nutrients            | -0.125 |  0.004 |     0.130 |   -0.375    0.133 |
+            crab                 | -0.094 |  0.000 |     0.173 |   -0.398    0.291 |
+            interaction          |  0.070 | -0.006 |     0.166 |   -0.262    0.389 |
+            dflav.density.scale  |  0.111 | -0.002 |     0.153 |   -0.237    0.371 |
+            gmono.density.scale  | -0.172 |  0.004 |     0.100 |   -0.366    0.041 |
+            endosym.change.scale |  0.265 | -0.018 |     0.152 |   -0.025    0.567 |
+                                 |        |        |           |                   |
+ INDIRECT:  nutrients            |  0.150 | -0.008 |     0.108 |   -0.074    0.355 |
+            crab                 |  0.058 | -0.001 |     0.041 |   -0.007    0.160 |
+                                 |        |        |           |                   |
+ TOTAL:     nutrients            |  0.025 | -0.004 |     0.114 |   -0.197    0.250 |
+            crab                 | -0.036 | -0.001 |     0.178 |   -0.358    0.348 |
+            interaction          |  0.070 | -0.006 |     0.166 |   -0.262    0.389 |
+            dflav.density.scale  |  0.111 | -0.002 |     0.153 |   -0.237    0.371 |
+            gmono.density.scale  | -0.172 |  0.004 |     0.100 |   -0.366    0.041 |
+            endosym.change.scale |  0.265 | -0.018 |     0.152 |   -0.025    0.567 |
+                                 |        |        |           |                   |
+ MEDIATORS: dflav.density.scale  |  0.061 | -0.004 |     0.085 |   -0.129    0.212 |
+            gmono.density.scale  |  0.058 | -0.001 |     0.041 |   -0.007    0.160 |
+            endosym.change.scale |  0.089 | -0.004 |     0.065 |   -0.002    0.264 |
+            
+            
+            
