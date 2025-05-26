@@ -35,9 +35,11 @@ This dataset contains the data and code required to replicate analyses in Renzi 
 | Control      | No manipulation | 10 |
 | Nutrient      | Slow-release nitrate fertilizer added      |   10 |
 | Crab | Pair of heterosexual *T. bidentata* crabs added at the start of the experiment      |    10 |
-| Both | Nitrate fertilizer and pair of crabs added      |    10 |
+| Both | Nitrate fertilizer and a pair of *T. bidentata* crabs added      |    10 |
 
-All corals were cleared of exosymbionts before the start of the experiment 
+All corals were cleared of exosymbionts before the start of the experiment. Nutrient treatments consisted of 200 g of polymer-coated potassium nitrate (Multicote 12-0-44, Haifa Chemicals Ltd), which we refreshed every ~3 months. Water samples taken near diffusers confirmed the water coming out of diffusers were enriched. Crab treatments were not maintained and if crabs left colonies they were not replaced. Coral colonies (represented in the dataset using coral_ids 1-40) were blocked so that blocks ran perpendicular to the net flow direction to account for any recruitment shadows. Each block contained all 4 treatments in a random order (see schematic below).
+
+
 
 
 EXPERIMENTAL SETUP
