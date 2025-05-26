@@ -43,13 +43,13 @@ All corals were cleared of exosymbionts (i.e., coral-associated fishes and inver
 
 ### Permitting
 
-All research was based out of the University of California Gump Research Station and conducted on the north shore of Moorea, a volcanic island in the Society Islands archipelago. Research was completed under permits issued by the Territorial Government of French Polynesia (Délégation à la Recherche) and the Haut-Commissariat de la République en Polynésie Francaise (DTRT). Coral tissue samples were transported under the Convention sur le commerce international des espèces de flore et de faune sauvages menaces d’extinction (CITES) export permit FR2198700097-E. 
+All research was based out of the University of California Gump Research Station and conducted on the north shore of Moorea, an island in the Society Islands archipelago. Research was completed under permits issued by the Territorial Government of French Polynesia (Délégation à la Recherche) and the Haut-Commissariat de la République en Polynésie Francaise (DTRT). Coral tissue samples were transported under the Convention sur le commerce international des espèces de flore et de faune sauvages menaces d’extinction (CITES) export permit FR2198700097-E. 
 
 ### Recommended Citation
 
 Official citation forthcoming
 
-Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W Osenberg, and Deron E. Burkepile (202X). Nitrogen addition strengthens coral mutualisms, mitigating the negative effects of enrichment on coral health. *In prep*.
+Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W. Osenberg, and Deron E. Burkepile (202X). Nitrogen addition strengthens coral mutualisms, mitigating the negative effects of enrichment on coral health. *In prep*.
 
 ### Acknowledgements
 
@@ -82,8 +82,8 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 
 **Description:** Information about coral colonies (e.g., volume, block, treatment) as well as information on key exosymbionts associated with that colony. Key exosymbionts include: 
 - *Trapezia bidentata*, the mutualistic crab we used in experimental treatments (we surveyed abundances of *T. bidentata* after 1 month and 13 months of experimental treatments)
-- *Dascyllus flavicaudus*, a coral mutaulist associated with improved aeration, reduced sedimentation, and beneficial nutrient excretions 
-- *Galeropsis monodonta*, a coral parasite that feeds on coral tissue
+- *Dascyllus flavicaudus*, a coral mutaulist associated with improved oxygenation, reduced sedimentation, and beneficial nutrient excretions 
+- *Galeropsis monodonta*, a coral parasite that feeds on *Pocillopora* coral tissue
 
 #### Variables
 
