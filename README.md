@@ -121,7 +121,7 @@ Note: During data exploration we found that carbohydrate and protein content wer
 
 *Nitrogen concentration of water near diffusers versus controls*
 
-**Description:** We measured the water near nutrient diffusers and near colonies without nutrient diffusers to quantify whether diffusers were enriching the local seawater. To this end, we collected 60 mL of seawater near 10 randomly chosen colonies with diffusers or near 10 randomly chosen colonies without diffusers. Samples were then filtered (GF/F) into sterile tubes, frozen, and analyzed at the University of California Marine Science Analytical Laboratory. We sampled water 4 days after refreshing nutrients and 1 month afterwards.
+**Description:** We measured the water near nutrient diffusers and near colonies without nutrient diffusers to quantify whether diffusers were enriching the local seawater. To this end, we collected 60 mL of seawater near 10 randomly chosen colonies with diffusers or near 10 randomly chosen colonies without diffusers. Samples were then filtered (GF/F) into sterile tubes, frozen, and analyzed at the University of California Marine Science Analytical Laboratory. We sampled seawater twice: once 4 days after and once 1 month after refreshing nutrients.
 
 #### Variables
 
