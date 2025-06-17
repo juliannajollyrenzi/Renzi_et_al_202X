@@ -2,6 +2,8 @@
 title: "Piecewise SEM protein and carb models"
 output: html_document
 date: "2025-05-26"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -62,8 +64,8 @@ theme_set(
 # Read in data
 
 ```{r}
-physiology_1 <- read_csv(here("cleaned_data", "physiology.csv"))
-metadata <- read_csv(here("cleaned_data", "metadata.csv"))
+physiology_1 <- read_csv(here("data", "physiology.csv"))
+metadata <- read_csv(here("data", "metadata.csv"))
 ```
 
 # Prepare data
@@ -148,6 +150,7 @@ check_model(m.endo)
   qqline(m.endo$residuals)
   check_normality(simulate_residuals(m.endo))
 ```
+
 
 # Protein model
 

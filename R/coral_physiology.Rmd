@@ -2,6 +2,8 @@
 title: "Coral physiology"
 output: html_document
 date: "2025-05-26"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -123,7 +125,30 @@ check_model(m.prot.1)
 ```
 
 ```{r examine results}
-car::Anova(m.prot.1) 
+car::Anova(m.prot.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum)) 
+```
+
+Drop interaction
+
+```{r make model}
+m.prot.2 <- glmmTMB(protein_change ~ crab + nutrients + (1|block), 
+                  family = gaussian("identity"),
+                  data = physiology_2)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.prot.2 <- DHARMa::simulateResiduals(m.prot.2)
+
+testResiduals(resid.m.prot.2, plot = T)
+testDispersion(resid.m.prot.2)
+testZeroInflation(resid.m.prot.2)
+testQuantiles(resid.m.prot.2, plot = T) 
+check_model(m.prot.2)
+```
+
+```{r examine results}
+car::Anova(m.prot.2, type = 2) 
 ```
 
 # Carbohydrate change
@@ -169,12 +194,37 @@ check_model(m.carb.1)
 ```
 
 ```{r examine results}
-car::Anova(m.carb.1)
+car::Anova(m.carb.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
+```
+
+Drop interaction term
+
+```{r make model}
+m.carb.2 <- glmmTMB(carb_change ~ crab + nutrients + (1|block), 
+                  family = gaussian(),
+                  data = physiology_2)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.carb.2 <- DHARMa::simulateResiduals(m.carb.2)
+
+testResiduals(resid.m.carb.2, plot = T)
+testDispersion(resid.m.carb.2)
+testZeroInflation(resid.m.carb.2)
+testQuantiles(resid.m.carb.2, plot = T) 
+check_model(m.carb.2)
+```
+
+```{r examine results}
+car::Anova(m.carb.2, type = 2)
 ```
 
 # Tissue loss
 
 First, plot:
+
+## Old tissue loss plot:
 
 ```{r plot}
 # use metadata because want to include coral #25
@@ -196,6 +246,29 @@ metadata %>%
   geom_hline(yintercept = 0, linetype = "dashed") +
   xlab("") +
   ylab("Tissue loss (%)") +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", fill = NA, size = 2.3),
+        legend.position = "none") -> tl.plt.old
+```
+
+## New tissue loss plot:
+
+```{r plot}
+# use metadata because want to include coral #25
+metadata %>% 
+  # get column names/values nice for plotting
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>% 
+  group_by(Crab, Nutrients, treatment) %>% 
+  summarize(sum_TL_binary = sum(tissue_loss_binary)) %>% 
+  ggplot(aes(x = Crab, y = sum_TL_binary, fill = Nutrients)) + 
+  geom_bar(stat = "identity",
+           position = "dodge") +
+  ylab("Corals with tissue loss") +
+  xlab("") +
+  scale_fill_manual(values = c("Ambient" = b.color, "Enriched" = n.color)) +
   theme(text = element_text(size=20),
         panel.border = element_rect(color="black", fill = NA, size = 2.3),
         legend.position = "none") -> tl.plt
@@ -221,7 +294,30 @@ check_model(m.tl.1)
 ```
 
 ```{r examine results}
-car::Anova(m.tl.1) 
+car::Anova(m.tl.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum)) 
+```
+
+Drop the interaction term
+
+```{r}
+m.tl.2 <- glmmTMB(tissue_loss_binary ~ crab + nutrients + (1|block), 
+                  family = binomial(link = "logit"),
+                  data = metadata)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.tl.2 <- DHARMa::simulateResiduals(m.tl.2)
+
+testResiduals(resid.m.tl.2, plot = T)
+testDispersion(resid.m.tl.2)
+testZeroInflation(resid.m.tl.2)
+testQuantiles(resid.m.tl.2, plot = T) 
+check_model(m.tl.2)
+```
+
+```{r examine results}
+car::Anova(m.tl.2, type = 2) 
 ```
 
 # Endosymbionts
@@ -266,7 +362,30 @@ check_model(m.endo.1)
 ```
 
 ```{r examine results}
-car::Anova(m.endo.1)
+car::Anova(m.endo.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
+```
+
+Drop interaction term
+
+```{r make model}
+m.endo.2 <- glmmTMB(endosym_percent_change ~ crab + nutrients + (1|block), 
+                  family = gaussian(link = "identity"),
+                  data = physiology_2)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.endo.2 <- DHARMa::simulateResiduals(m.endo.2)
+
+testResiduals(resid.m.endo.2, plot = T)
+testDispersion(resid.m.endo.2)
+testZeroInflation(resid.m.endo.2)
+testQuantiles(resid.m.endo.2, plot = T) 
+check_model(m.endo.2)
+```
+
+```{r examine results}
+car::Anova(m.endo.2, type = 2)
 ```
 
 # Plot all together

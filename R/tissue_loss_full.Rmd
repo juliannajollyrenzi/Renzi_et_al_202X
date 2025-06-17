@@ -2,6 +2,8 @@
 title: "Extended tissue loss model with exosymbionts"
 output: html_document
 date: "2025-05-26"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -76,11 +78,11 @@ metadata %>%
   inner_join(physiology_1) -> physiology_2
 ```
 
-Create binomial GLMM
+Create Tweedie GLMM
 
 ```{r model}
-m.tl.full.1 <- glmmTMB(tissue_loss_binary ~ crab + nutrients + crab:nutrients + dflav_density_per_1000cm3 + gmono_density_per_1000cm3 + endosym_percent_change, 
-                  family = binomial(link = "logit"),
+m.tl.full.1 <- glmmTMB(tissue_loss_5_percent ~ crab + nutrients + crab:nutrients + dflav_density_per_1000cm3 + gmono_density_per_1000cm3 + endosym_percent_change + (1|block), 
+                  family = tweedie(link = "log"),
                   data = physiology_2)
 ```
 
@@ -92,17 +94,29 @@ testResiduals(resid.m.tl.full.1, plot = T)
 testDispersion(resid.m.tl.full.1)
 testZeroInflation(resid.m.tl.full.1)
 testQuantiles(resid.m.tl.full.1, plot = T) 
-check_model(m.tl.full.1)
+plotResiduals(resid.m.tl.full.1)
+check_model(resid.m.tl.full.1)
 ```
 
 ```{r examine results}
-car::Anova(m.tl.full.1) 
+car::Anova(m.tl.full.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
 ```
 
-# Plot D. flavicaudus across treatments
+```{r}
+plot(emmeans(m.tl.full.1, pairwise ~ nutrients|crab))
+  emmeans(m.tl.full.1, pairwise ~ nutrients|crab)
+  
+plot(emmeans(m.tl.full.1, pairwise ~ crab|nutrients))
+  emmeans(m.tl.full.1, pairwise ~ crab|nutrients)
+```
+
+
+# Plot D. flavicaudus across treatments (old figures)
+
+(Old figure)
 
 ```{r}
-pdf(here("figures/tissue_loss_dflav.pdf"), height = 5, width = 8)
+pdf(here("figures/tissue_loss_dflav_old.pdf"), height = 5, width = 8)
 
 metadata %>% 
   # clean up values for plotting
@@ -128,5 +142,65 @@ metadata %>%
 
 dev.off()
 ```
+
+
+Get contrasts using emmeans
+
+```{r}
+emm.tl <- as_tibble(summary(emmeans::emmeans(m.tl.full.1, pairwise ~ nutrients|crab), type = "response")$emmeans) 
+```
+
+```{r}
+metadata %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>%
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) -> metadata_2
+```
+
+Make updated figure 
+
+```{r}
+pdf(here("figures/tissue_loss_dflav.pdf"), height = 4, width = 8)
+
+# plot option #2
+emm.tl %>% 
+  # get column names/values nice for plotting
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>% 
+   mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>%  
+  ggplot() +
+  geom_pointrange(aes(x = Crab, y = response,
+                      ymin = asymp.LCL, ymax = asymp.UCL), 
+                  color = "black", size = 0.8, linewidth = 1.5,
+                  position = position_dodge2(width = 0.75)) +
+  # make a new color scale
+  ggnewscale::new_scale_color() +
+  #geom_boxplot(aes(x = Crab, y = tissue_loss_5_percent, fill = Nutrients), 
+  #             data = metadata_2,
+  #             size = 1,
+  #             outlier.shape = NA) + 
+  geom_point(aes(x = Crab, y = tissue_loss_5_percent,
+                 size = dflav_density_per_1000cm3,
+                 color = Nutrients),
+             data = metadata_2,
+             alpha = 0.5,
+             position = position_jitterdodge(jitter.width = 0.2,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_color_manual(values = c("Enriched" = n.color, "Ambient" = b.color)) +
+  scale_size_continuous(name = expression(paste(italic("D. flavicaudus"), " density"))) +
+  theme(text = element_text(size=12),
+        panel.border = element_rect(color="black", size = 2.3),
+        legend.position = "right",
+        axis.text.x = element_text(size = 17),
+        axis.text.y = element_text(size = 12)) +
+  ylab("Tissue loss (%)") +
+  xlab("")
+
+dev.off()
+```
+
 
 

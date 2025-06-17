@@ -117,7 +117,7 @@ check_model(m.vol)
 ```
 
 ```{r examine results}
-car::Anova(m.vol) 
+car::Anova(m.vol, type = 2) 
 ```
 
 # Macrosymbiont densities
@@ -184,8 +184,32 @@ check_model(m.abund.1)
 ```
 
 ```{r examine results}
-car::Anova(m.abund.1)
+car::Anova(m.abund.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
 ```
+
+Drop interaction
+
+```{r tweedie}
+m.abund.2 <- glmmTMB(density_1000cm3 ~ crab + nutrients + (1|block), 
+                           family = tweedie(link = "log"),
+                           data = total_abund)
+```
+
+```{r test assumptions}
+# get residuals
+resid.m.abund.2 <- DHARMa::simulateResiduals(m.abund.2)
+
+testResiduals(resid.m.abund.2, plot = T)
+testDispersion(resid.m.abund.2)
+testZeroInflation(resid.m.abund.2)
+testQuantiles(resid.m.abund.2, plot = T) 
+check_model(m.abund.2)
+```
+
+```{r examine results}
+car::Anova(m.abund.2, type = 2)
+```
+
 
 # A mutualist: D. flavicaudus
 
@@ -209,17 +233,36 @@ check_model(m.dflav.1)
 ```
 
 ```{r examine results}
-car::Anova(m.dflav.1)
+car::Anova(m.dflav.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
 ```
 
-```{r}
-summary(m.dflav.1)
+Drop the interaction
+
+```{r D. flav ~ treatments}
+m.dflav.2 <- glmmTMB(dflav_density_per_1000cm3 ~ crab + nutrients +  (1|block), 
+                     family =  tweedie(link = "log"),
+                     data = metadata)
+```
+
+```{r test assumptions}
+# get residuals
+resid.dflav.2 <- DHARMa::simulateResiduals(m.dflav.2)
+
+testResiduals(resid.dflav.2, plot = T)
+testDispersion(resid.dflav.2)
+testZeroInflation(resid.dflav.2)
+testQuantiles(resid.dflav.2, plot = T) 
+check_model(m.dflav.2)
+```
+
+```{r examine results}
+car::Anova(m.dflav.2, type = 2)
 ```
 
 Get magnitude of nutrient effect:
 
 ```{r}
-summary(emmeans::emmeans(m.dflav.1, pairwise ~ nutrients), type = "response")$emmeans 
+summary(emmeans::emmeans(m.dflav.2, pairwise ~ nutrients), type = "response")$emmeans 
 ```
 
 ## Plot
@@ -227,7 +270,7 @@ summary(emmeans::emmeans(m.dflav.1, pairwise ~ nutrients), type = "response")$em
 First, get contrasts for nutrients, which was a significant predictor of variation:
 
 ```{r}
-emm.dflav <- as_tibble(summary(emmeans::emmeans(m.dflav.1, pairwise ~ nutrients), type = "response")$emmeans) 
+emm.dflav <- as_tibble(summary(emmeans::emmeans(m.dflav.2, pairwise ~ nutrients), type = "response")$emmeans) 
 ```
 
 
@@ -283,13 +326,38 @@ check_model(m.gmono.1)
 Looks all right. Check results
 
 ```{r examine results}
-car::Anova(m.gmono.1)
+car::Anova(m.gmono.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
 ```
 
-Check magnitude of effect
+Drop interaction
 
 ```{r}
-summary(emmeans::emmeans(m.gmono.1, pairwise ~ crab), type = "response")$emmeans
+m.gmono.2 <- glmmTMB(gmono_density_per_1000cm3 ~ crab + nutrients + (1|block), 
+                     family = Gamma(link = "log"), 
+                     data = metadata) 
+```
+
+```{r test assumptions}
+# get residuals
+resid.gmono.2 <- DHARMa::simulateResiduals(m.gmono.2)
+
+testResiduals(resid.gmono.2, plot = T)
+testDispersion(resid.gmono.2)
+testZeroInflation(resid.gmono.2)
+testQuantiles(resid.gmono.2, plot = T) 
+check_model(m.gmono.2)
+```
+
+Looks all right. Check results
+
+```{r examine results}
+car::Anova(m.gmono.2, type = 2)
+```
+
+Get magnitude of nutrient effect:
+
+```{r}
+summary(emmeans::emmeans(m.gmono.2, pairwise ~ crab), type = "response")$emmeans 
 ```
 
 ## Plot
@@ -297,7 +365,7 @@ summary(emmeans::emmeans(m.gmono.1, pairwise ~ crab), type = "response")$emmeans
 Get contrasts using emmeans
 
 ```{r}
-emm.gmono <- as_tibble(summary(emmeans::emmeans(m.gmono.1, pairwise ~ crab), type = "response")$emmeans) 
+emm.gmono <- as_tibble(summary(emmeans::emmeans(m.gmono.2, pairwise ~ crab), type = "response")$emmeans) 
 ```
 
 

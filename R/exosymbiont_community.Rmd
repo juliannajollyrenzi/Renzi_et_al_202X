@@ -147,7 +147,7 @@ taxa_diversity_2 %>%
 
 ```{r model}
 m.rich.1 <- glmmTMB(richness ~ crab + nutrients + crab:nutrients + (1|block),
-                    family = poisson(),
+                    family = poisson(link = "log"),
                     data = taxa_diversity_2)
 ```
 
@@ -164,8 +164,33 @@ check_model(m.rich.1)
 Examine results
 
 ```{r examine results}
-car::Anova(m.rich.1) 
+car::Anova(m.rich.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum)) 
 ```
+
+Drop interaction
+
+```{r model}
+m.rich.2 <- glmmTMB(richness ~ crab + nutrients + (1|block),
+                    family = poisson(link = "log"),
+                    data = taxa_diversity_2)
+```
+
+```{r test assumptions}
+resid.m.rich.2 <- DHARMa::simulateResiduals(m.rich.2)
+
+testResiduals(resid.m.rich.2, plot = T)
+testDispersion(resid.m.rich.2)
+testZeroInflation(resid.m.rich.2)
+testQuantiles(resid.m.rich.2, plot = T) 
+check_model(m.rich.2)
+```
+
+Examine results
+
+```{r examine results}
+car::Anova(m.rich.2, type = 2) 
+```
+
 
 # Evenness
 
@@ -206,6 +231,28 @@ check_model(m.even.1)
 
 ```{r examine results}
 car::Anova(m.even.1) 
+```
+
+Drop interaction term
+
+```{r first model}
+m.even.2 <- glmmTMB((evenness) ~ crab + nutrients + (1|block),
+                  family = Gamma(link = "log"),
+                  data = taxa_diversity_2)
+```
+
+```{r test assumptions}
+resid.m.even.2 <- DHARMa::simulateResiduals(m.even.2)
+
+testResiduals(resid.m.even.2, plot = T)
+testDispersion(resid.m.even.2)
+testZeroInflation(resid.m.even.2)
+testQuantiles(resid.m.even.2, plot = T) 
+check_model(m.even.2)
+```
+
+```{r examine results}
+car::Anova(m.even.2, type = 2) 
 ```
 
 # Beta diversity
@@ -283,3 +330,4 @@ pdf(here("figures", "evenness_and_richness.pdf"), height = 9.5, width = 13)
 
 dev.off()
 ```
+

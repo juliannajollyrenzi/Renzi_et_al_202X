@@ -168,8 +168,10 @@ testQuantiles(resid.crab.1, plot = T)
 check_model(m.crab.1)
 ```
 
+No interaction so use type II ANOVA
+
 ```{r examine results}
-car::Anova(m.crab.1)
+car::Anova(m.crab.1, type = 2)
 ```
 
 # Crab abundance stats
