@@ -9,7 +9,7 @@ Data and analysis for Renzi et al. 202X (*Nitrogen addition strengthens coral mu
 
 ## Permanent data availability
 
-Upon acceptance, all data will be permanently available on EDI and all code will be published on Zenodo. We will update associated links here when that time comes.
+Upon acceptance, all data will be permanently available on EDI and all code will be published on Zenodo. We will then update associated links here.
 
 ## Description of the data and file structure
 
@@ -37,22 +37,19 @@ This dataset contains the data and code required to replicate analyses in Renzi 
 | Crab | Pair of heterosexual *T. bidentata* crabs added at the start of the experiment      |    10 |
 | Both | Nitrate fertilizer and a pair of *T. bidentata* crabs added      |    10 |
 
-All corals were cleared of exosymbionts before the start of the experiment. Nutrient treatments consisted of 200 g of polymer-coated potassium nitrate (Multicote 12-0-44, Haifa Chemicals Ltd), which we refreshed every ~3 months. Water samples taken near diffusers confirmed the water coming out of diffusers were enriched. Crab treatments were not maintained and if crabs left colonies they were not replaced. Coral colonies (represented in the dataset using coral_ids 1-40) were blocked so that blocks ran perpendicular to the net flow direction to account for any recruitment shadows. Each block contained all 4 treatments in a random order (see schematic below).
+All corals were cleared of exosymbionts (i.e., coral-associated fishes and invertebrates) before the start of the experiment. Nutrient treatments consisted of 200 g of polymer-coated potassium nitrate (Multicote 12-0-44, Haifa Chemicals Ltd) per coral, which we refreshed every ~3 months. Water samples taken near diffusers confirmed the water coming out of diffusers were enriched. Crab treatments were not maintained and if crabs left colonies they were not replaced. Coral colonies (represented in the dataset using coral_ids 1-40) were blocked so that blocks ran perpendicular to the net flow direction to account for any recruitment shadow effects. Each block contained all 4 treatments in a random order (see schematic below, with rectangles representing a coral colony in a given treatment; Figure S1 in the associated manuscript). Coral #25 experienced 100% mortality during the experiment and is omitted from most analyses.
 
-
-
-
-EXPERIMENTAL SETUP
+![ Alt text](./images/experimental_layout.jpg)
 
 ### Permitting
 
-All research was based out of the University of California Gump Research Station and conducted on the north shore of Moorea, a volcanic island in the Society Islands archipelago. Research was completed under permits issued by the Territorial Government of French Polynesia (Délégation à la Recherche) and the Haut-Commissariat de la République en Polynésie Francaise (DTRT). Coral tissue samples were transported under the Convention sur le commerce international des espèces de flore et de faune sauvages menaces d’extinction (CITES) export permit FR2198700097-E. 
+All research was based out of the University of California Gump Research Station and conducted on the north shore of Moorea, an island in the Society Islands archipelago. Research was completed under permits issued by the Territorial Government of French Polynesia (Délégation à la Recherche) and the Haut-Commissariat de la République en Polynésie Francaise (DTRT). Coral tissue samples were transported under the Convention sur le commerce international des espèces de flore et de faune sauvages menaces d’extinction (CITES) export permit FR2198700097-E. 
 
 ### Recommended Citation
 
 Official citation forthcoming
 
-Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W Osenberg, and Deron E. Burkepile (202X). Nitrogen addition strengthens coral mutualisms, mitigating the negative effects of enrichment on coral health. *In prep*.
+Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W. Osenberg, and Deron E. Burkepile (202X). Nitrogen addition strengthens coral mutualisms, mitigating the negative effects of enrichment on coral health. *In prep*.
 
 ### Acknowledgements
 
@@ -60,9 +57,7 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 
 # Data files
 
-## Exosymbionts
-
-#### File: exosymbionts.csv
+## File: exosymbionts.csv
 
 *Exosymbiont taxa abundances*
 
@@ -75,308 +70,72 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 - Tanaids (order Tanaidacea)
 - Worms (i.e., polychaetes, annelids, nemerteans, and sipunculids) 
 
-##### Variables
+#### Variables
 
-* coral_id: Coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets. Corals 
-* Transect: Transect number; transects ran perpendicular to shore and there are 6 transects total
-* Quadrat: Quadrat number along a given transect; there are 15 quadrats/transect
-* Perc_macroalgae: Estimated percent cover of macroalgae; 10 = 10%
-* Perc_coral: Estimated percent cover of live stony corals; 10 = 10%
-* Perc_dead_coral: Estimated percent cover of dead corals/reef structure; 10 = 10%
+* coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
+* taxa_group: The name of the taxa group associated with a count (e.g., Alpheidae, Palaemonidae, Muricidae, Gobidae, Amphipods, etc.) (string)
+* abundance: Number of individuals counted within a taxa group for a coral (integer)
 
-#### File: field\_crab\_surveys.csv
+## File: metadata.csv
 
-*Field surveys*
+*Metadata associated with each coral colony*
 
-**Description:** To assess how common crabs were on *Acropora aspera* colonies, we surveyed crab communities on *A. aspera* at low tide, counting the abundance of crabs and noting what part of the colony they were on (living, dead, or the boundary between living and dead).
+**Description:** Information about coral colonies (e.g., volume, block, treatment) as well as information on key exosymbionts associated with that colony. Key exosymbionts include: 
+- *Trapezia bidentata*, the mutualistic crab we used in experimental treatments (we surveyed abundances of *T. bidentata* after 1 month and 13 months of experimental treatments)
+- *Dascyllus flavicaudus*, a coral mutaulist associated with improved oxygenation, reduced sedimentation, and beneficial nutrient excretions 
+- *Galeropsis monodonta*, a coral parasite that feeds on *Pocillopora* coral tissue
 
-##### Variables
+#### Variables
 
-* Coral_ID: colony identifier for survey purposes; these ID's do not match any other ID's in the datasets provided here
-* Substrate_type: classification of which part of the *A. aspera* colony the *Cyclodius* crab was on (i.e., living tissue, dead, or the boundary between living and dead). No_cyclodius means that there were no crabs observed for a colony.
-* Cyclodius: the abundance of *Cyclodius* crabs in each category on a given colony
+* coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
+* block: Block or row that the coral colony belongs to (see schematic above). Blocks run parallel to the reef crest and all four treatments are represented randomly within each block (numeric; 1-10)
+* treatment: Description of the coral colony's treatment assignment. Options are Control, Crab, Nutrient, or Both (string)
+* crab: Whether we added *T. bidentata* to that colony (Y = yes, N = no). All Crab and Both treatments have a "Y" in the crab column, while Control and Nutrient treatments have a "N" in the crab column(string)
+* nutrients: Whether we added nitrate to that colony (Y = yes, N = no). All Nutrient and Both treatments have a "Y" in the nutrients column, while Control and Crab treatments have a "N" in the nutrients column (string)
+* coral_vol_cm3: Volume of the coral colony in cubic centimeters, approximated using the equation for the volume of an ellipsoid (numeric)
+* tissue_loss_5_percent: Approximate percent of a coral colony that experienced tissue loss at the end of 13 months. Estimates were made visually to the nearest 5% (integer)
+* tissue_loss_binary: Whether a coral experienced any visible tissue loss (1) or not (0) (binary, 0 or 1)
+* tbiden_1_month: The number of large (carapace >= 8 mm) *T. bidentata* on corals after 1 month of the experiment (integer)
+* tbiden_13_month: The number of large (carapace >= 8 mm) *T. bidentata* on corals at the end of the experiment (integer)
+* gmono_abundance: The abundance of *G. monodonta* on a coral at the end of 13 months (integer)
+* gmono_density_per_1000cm3: The abundance of *G. monodonta* on a coral at the end of 13 months divided by coral_vol_cm3 and multiplied by 1,000 (numeric)
+* dflav_abundance: The abundance of *D. flavicaudus* on a coral at the end of 13 months (integer)
+* dflav_density_per_1000cm3: The abundance of *D. flavicaudus* on a coral at the end of 13 months divided by coral_vol_cm3 and multiplied by 1,000 (numeric)
 
-## Mesocosm experiment
+## File: physiology.csv
 
-#### File: initial\_buoyant\_weights.csv
+*Change in proteins, carbohydrates, and endosymbiont densities for experimental corals after 13 months*
 
-*Mesocosm experiment*
+**Description:** Change in protein content, change in carbohydrate content, and percent change in endosymbiont densities for experimental coral colonies, quantified from airbrushed coral tissue. Protein and carbohydrate content are calculated as a percentage of ash free dry weight. Change in protein/carbohydrate content is the protein/carbohydrate content for a coral at the end of the experiment minus the protein/carbohydrate content for that same coral at the start of the experiment. We quantified protein content using a Pierce BCA Protein Assay Kit with bovine serum albumin standard with 3 technical replicates for each sample and standard. We quantified carbohydrate content using a sulfuric acid incubation and glucose standards (Masuko et al. 2005, Baumann et al. 2021) with 3 technical replicates. We quantified endosymbiont densities using a Marienfled 0.100 mm hemocytometer using established methods (Becker et al. 2021), which we normalized to coral surface area to get the number of endosymbiont cells per square centimeter of tissue. Coral surface area was calculated using standard wax dipping techniques. Percent change of endosymbiont densities was calculated as the endosymbiont density at the end of the experiment minus the density at the start of the experiment divided by the density at the start of the experiment.
 
-**Description:** Starting weights of *A. aspera* fragments, which we used to make sure that there were not significant differences in size among treatments. Corals were weighed using buoyant weighing techniques (Davies 1989) on January 31, 2020 prior to treatment application.
+Note: During data exploration we found that carbohydrate and protein content were linearly correlated with the surface area of the coral fragment. To deal with this correlation, we estimated the relationship between these metrics and fragment surface area in initial samples and subtracted the product of the slope of the line and fragment size from estimates to de-trend any effect of fragment size. The values in this file represent these adjusted values.
 
-##### Variables
+#### Variables
 
-* Coral_ID: Coral identifier for experimental corals; matches coral identifiers for other CSVs related to the tank-based experiment
-* Initial_dry_weight: initial coral weight in grams
+* coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
+* protein_change: The difference between the final and starting protein content of a coral colony (numeric)
+* carb_change: The difference between the final and starting carbohydrate content of a coral colony (numeric)
+* endosym_percent_change: The percent change in endosymbiont density over the course of the experiment (numeric)
 
-#### File: coral\_tissue\_loss.csv
+## File: water_nutrients.csv
 
-*Mesocosm experiment*
+*Nitrogen concentration of water near diffusers versus controls*
 
-**Description:** Daily estimates of tissue loss on experimental corals. The front and back of fragments were photographed daily and estimates made from photographs. The two sides were averaged together to get approximate tissue loss for a given day.
+**Description:** We measured the water near nutrient diffusers and near colonies without nutrient diffusers to quantify whether diffusers were enriching the local seawater. To this end, we collected 60 mL of seawater near 10 randomly chosen colonies with diffusers or near 10 randomly chosen colonies without diffusers. Samples were then filtered (GF/F) into sterile tubes, frozen, and analyzed at the University of California Marine Science Analytical Laboratory. We sampled seawater twice: once 4 days after and once 1 month after refreshing nutrients.
 
-##### Variables
+#### Variables
 
-* Coral_ID: Coral identifier for experimental corals; matches coral identifiers for other CSVs related to the tank-based experiment
-* Date: Date corals were observed
-* Side: Which side (front or back) estimate relates to--sides were averaged to get percent tissue loss for a given fragment on a given day
-* Percent_dead: Estimate of tissue loss; 10 = 10%
+* coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
+* timepoint: Whether the water sample is from 4 days (timepoint = 1) or 1 month (timepoint = 2) after nutrients addition (integer/factor)
+* nitrite_nitrate_umol: Concentration of nitrate + nitrite in seawater in µmol (numeric)
+* nitrite_nitrate_belowlimit: Whether the sample was below the analytical detection threshold (0.20 µmol; Y = below the limit, N = not below the limit) (string)
 
-#### File: metadata.csv
 
-*Mesocosm experiment*
+### Citations
 
-**Description:** Metadata for the mesocom experiment
+Baumann, J. H., C. B. Bove, L. Carne, I. Gutierrez, and K. D. Castillo (2021). Two offshore coral species show greater acclimatization capacity to environmental variation than nearshore counterparts in southern Belize. Coral Reefs 40:1181–1194. DOI: 10.1007/s00338-021-02124-8
 
-##### Variables
+Becker, D. M., H. M. Putnam, D. E. Burkepile, T. C. Adam, R. Vega Thurber, and N. J. Silbiger (2021). Chronic low-level nutrient enrichment benefits coral thermal performance in a fore reef habitat. Coral Reefs 40:1637–1655. DOI: 10.1007/s00338-021-02155-1
 
-* Coral_ID: Coral identifier that matches other mesocosm datasets
-* Treatment: Experimental treatment identifier; NNW = no crab, no algae, wounding; NAW = no crab, algae, wounding; CNN = crab, no algae, no wounding; CAN = crab, algae, no wounding; NAN = no crab, no algae, no wounding; NNN = no crab, no algae, no wounding (full control); CAW = crab, algae, wounding; CNW = crab, no algae, wounding
-* Crab_treatment: Binary (Y = yes, N = no) as to whether a crab was added
-* Algae_treatment: Binary (Y = yes, N = no) as to whether a macroalgal clump was added
-* Wounding_treatment: Binary (Y = yes, N = no) as to whether a coral was wounded
-* Tank_ID: Tank identifier; there were 20 total tanks with 4 units per tank
-* Crab_size_mm_initial: Carapace length, in mm, of the crab added; NA written if the coral was not in a crab treatment
-* HOBO_ID: HOBO temperature logger identifier, if one was attached to the unit; NA was written if there was not a temperature logger attached
-* Initial_algal_biomass_g: Initial algal biomass, in grams, added to corals in macroalgal treatments; NA was written if the coral was not in a macroalgal treatment 
+Masuko, T., A. Minami, N. Iwasaki, T. Majima, S.-I. Nishimura, and Y. C. Lee (2005). Carbohydrate analysis by a phenol–sulfuric acid method in microplate format. Analytical Biochemistry 339:69–72. DOI: 10.1016/j.ab.2004.12.001
 
-#### File: HOBO\_metadata.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Metadata for temperature logger CSVs
-
-##### Variables
-
-* Hobo_ID: HOBO identifier
-* Tank: Tank identifier that the logger was recording from
-* Date_pulled: Day the logger was pulled from the mesocosm experiment
-
-#### File: 10550964.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10550964
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10550964: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10551958.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10551958
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10551958: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10550963.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10550963
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10550963: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10550969.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10550969
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10550969: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10568876.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10568876
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10568876: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10550956.csv
-
-**Description:** Temperature logger file for HOBO logger 10550956
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10550956: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10551961.csv
-
-**Description:** Temperature logger file for HOBO logger 10551961
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10551961: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10550962.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10550962
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10550962: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10551954.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10551954
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10551954: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10550960.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10550960
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10550960: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10551953.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10551953
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10551953: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10550958.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10550958
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10550958: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-#### File: 10551956.csv
-
-*Temperature: mesocosm experiment*
-
-**Description:** Temperature logger file for HOBO logger 10551956
-
-##### Variables
-
-* Plot Title: HOBO logger ID--see logger metadata for information on tank placement
-* 10551956: Information below is the un-modified logger information, including temperature, date, and light intensity
-
-## Field experiment
-
-#### File: colony\_specs.csv
-
-*Field experiment*
-
-**Description:** Colony location and size for *A. aspera* colonies used for the field wounding-algal experiment
-
-##### Variables
-
-* Colony_ID: Experimental colony identifier; matches with other experimental datasets, but not survey or mesocosm datasets
-* length_cm: Maximum length, in centimeters, of the coral colony
-* width_cm: Width, in centimeters, of the coral colony
-* height_cm: Height, in centimeters, of the coral colony
-* lat: Latitude of the coral colony's location
-* long: Longitude of the coral colony's location
-
-#### File: algae\_weight.csv&#x20;
-
-*Field experiment*
-
-**Description:** Weight of macroalgae used in the field experiment
-
-##### Variables
-
-* Colony_ID: Experimental colony identifier; matches with other experimental datasets, but not survey or mesocosm datasets
-* NW_algae_initial_weight: Initial weight in grams of the macroalgae added to the control/not wounded part of the colony
-* W_algae_intial_weight: Initial weight in grams of the macroalgae added to the wounded part of the colony
-* NW_final_weight: Final weight in grams of the macroalgae added to the control/not wounded part of the colony
-* W_final_weight: Final weight in grams of the macroalgae added to the wounded part of the colony
-
-#### File: algal\_monitoring.csv
-
-*Field experiment*
-
-**Description:** Monitoring data from visual surveys of algal clumps each day of the field experiment.
-
-##### Variables
-
-* Colony_ID: Experimental colony identifier; matches with other experimental datasets, but not survey or mesocosm datasets
-* algae_remaining_yn: Binary value (1 = yes, 0 = no) detailing whether there was any macroalgae left on the patch at a given time point
-* time_point: Day of the field experiment on which the observation was made; on the seventh day, algal clumps were carefully removed from the patch and reweighed
-* treatment: Experimental treatment; NW = no wound/control, W = wounded
-* notes: Notes
-
-## Behavioral trials
-
-#### File: crab\_feeding\_behavior.csv
-
-*Behavioral trials*
-
-**Description:** Results from video analysis of crab trials detailing the number of bites crabs took on different parts of an *A. aspera* coral. Videos were reviewed to determine the number of bites each crab took on live tissue, dead skeleton, and along the tissue loss margin in each trial. We defined a bite as any time a crab used a claw to scrape along the coral and then brought the claw to its mouth. Given that the margin between living and dead coral is a thin line, we defined *C. ungulatus* as feeding along the margin if its claw scraped across both live tissue and dead skeleton before bringing its claw to its mouth.
-
-##### Variables
-
-* Trial: Trial identifier
-* Carapace_mm: Carapace length, in mm, of crab used in the trial
-* Bites_alive: Number of bites taken on live coral tissue
-* Bites_margin: Number of bites taken on the margin of live and dead
-* Bites_dead: Number of bites taken on the recently dead zone of tissue loss
-
-#### File: crab\_feeding\_imageJ.csv'
-
-*Behavioral trials*
-
-**Description:** Point contact data used for approximating the percent cover of live tissue, the zone of recent tissue loss, and the margin between living and dead on each coral fragment used in feeding video trials. The grid was created using a uniform grid in ImageJ (Schneider et al. 2012)
-
-##### Variables
-
-* Trial: Feeding video trial identifier
-* Date: Date the trial was conducted
-* Pixels^2: Pixel grid size set within ImageJ
-* Alive_Pixels: Number of grid cross sections that fell on top of alive coral tissue
-* Margin_Pixels: Number of grid cross sections that fell on top of the margin between alive and dead
-* Dead_Pixels: Number of grid cross sections that fell on top of the zone of tissue loss
-
-#### File: algal\_feeding\_trial.csv
-
-*Behavioral trials*
-
-**Description:** To test whether *C. ungulatus* reduces macroalgal biomass in tanks, we placed crabs in containers with macroalgae and monitored biomass removal over three days. Each algal clump was spun for 60 seconds and weighed before and after the trial to calculate biomass loss and percent biomass loss. Given that there were holes in each container to allow for water flow, we also ran 8 control trials to approximate background algal loss rate.
-
-##### Variables
-
-* Species: Whether there was a *Cyclodius* crab ("Cyclodius") in the container or not ("Control")
-* Carapace_mm: Carapace width of the crab used in a trial if *Cyclodius* was added; NA indicates control
-* Jar_number: Container identifier
-* Initial_weight_g: Initial weight of the macroalgae in grams per trial
-* Final_weight_g: Final weight of the macroalgae in grams per trial
