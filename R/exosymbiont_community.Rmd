@@ -325,8 +325,14 @@ adonis2(taxa_mat_1 ~ crab + nutrients + crab:nutrients,
 ```{r}
 pdf(here("figures", "evenness_and_richness.pdf"), height = 9.5, width = 13)
 
-(rich.plt + even.plt) / beta.plt + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
+
+"AABB
+#CC#" -> layout
+
+rich.plt + even.plt + beta.plt + plot_layout(design = layout) + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
                             tag_suffix = ')')
+
+
 
 dev.off()
 ```
