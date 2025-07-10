@@ -111,13 +111,65 @@ plot(emmeans(m.tl.full.1, pairwise ~ crab|nutrients))
 ```
 
 
-# Plot D. flavicaudus across treatments (old figures)
-
-(Old figure)
+Get contrasts using emmeans
 
 ```{r}
-pdf(here("figures/tissue_loss_dflav_old.pdf"), height = 5, width = 8)
+emm.tl <- as_tibble(summary(emmeans::emmeans(m.tl.full.1, pairwise ~ nutrients|crab), type = "response")$emmeans) 
+```
 
+# Plot tissue loss differences (Panel A)
+
+```{r}
+metadata %>% 
+  mutate(Crab = case_when(crab == "Y" ~ "Crab",
+                               crab == "N" ~ "No crab")) %>%
+  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Treatment = case_when(nutrients == "N" & crab == "N" ~ "Control", 
+                               nutrients == "Y" & crab == "N" ~ "Nutrient",
+                               nutrients == "N" & crab == "Y" ~ "Crab",
+                               nutrients == "Y" & crab == "Y" ~ "Both"
+                               )) -> metadata_2
+```
+
+Panel A
+
+```{r}
+emm.tl %>% 
+  mutate(Treatment = case_when(nutrients == "N" & crab == "N" ~ "Control", 
+                               nutrients == "Y" & crab == "N" ~ "Nutrient",
+                               nutrients == "N" & crab == "Y" ~ "Crab",
+                               nutrients == "Y" & crab == "Y" ~ "Both"
+                               )) %>% 
+  ggplot() +
+  geom_pointrange(aes(x = Treatment, y = response,
+                      ymin = asymp.LCL, ymax = asymp.UCL), 
+                  color = "black", size = 0.8, linewidth = 1.5,
+                  position = position_dodge2(width = 0.75)) +
+  # make a new color scale
+  ggnewscale::new_scale_color() +
+  geom_point(aes(x = Treatment, y = tissue_loss_5_percent,
+                 color = Treatment),
+             size = 2.5,
+             data = metadata_2,
+             alpha = 0.7,
+             position = position_jitterdodge(jitter.width = 0.2,
+                                             jitter.height = 0,
+                                             dodge.width = 0.75)) +
+  scale_color_manual(values = c("Both" = b.color, "Nutrient" = n.color,
+                                "Crab" = crab.color, "Control" = control.color)) +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", size = 2.3),
+        legend.position = "none",
+        axis.text.x = element_text(size = 17),
+        axis.text.y = element_text(size = 12)) +
+  ylab("Tissue loss (%)") +
+  xlab("") -> panelA
+```
+
+# Plot D. flavicaudus across treatments (Panel B)
+
+```{r}
 metadata %>% 
   # clean up values for plotting
   mutate(tissue_loss_binary = case_when(tissue_loss_binary == 1 ~ "Tissue loss",
@@ -126,7 +178,8 @@ metadata %>%
   geom_boxplot(size = 1, 
                outlier.shape = NA) +
   geom_point(aes(color = treatment),
-             size = 2.2,
+             size = 2.5,
+             alpha = 0.7,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
@@ -136,68 +189,19 @@ metadata %>%
   ylab("") +
   theme(text = element_text(size=20),
         panel.border = element_rect(color="black", size = 2.3),
-        legend.position = "top") +
-  xlab(expression(paste(italic("D. flavicaudus"), "/1000", cm^3))) 
-
-
-dev.off()
+        legend.position = "right") +
+  xlab(expression(paste(italic("D. flavicaudus"), "/1000", cm^3))) -> panelB
 ```
 
-
-Get contrasts using emmeans
-
-```{r}
-emm.tl <- as_tibble(summary(emmeans::emmeans(m.tl.full.1, pairwise ~ nutrients|crab), type = "response")$emmeans) 
-```
+# Plot together
 
 ```{r}
-metadata %>% 
-  mutate(Crab = case_when(crab == "Y" ~ "Crab",
-                               crab == "N" ~ "No crab")) %>%
-  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
-                               nutrients == "N" ~ "Ambient")) -> metadata_2
-```
+pdf(here("figures", "tissue_loss_dflav.pdf"), height = 4, width = 13)
 
-Make updated figure 
 
-```{r}
-pdf(here("figures/tissue_loss_dflav.pdf"), height = 4, width = 8)
+panelA + panelB + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
+                            tag_suffix = ')')
 
-# plot option #2
-emm.tl %>% 
-  # get column names/values nice for plotting
-  mutate(Crab = case_when(crab == "Y" ~ "Crab",
-                               crab == "N" ~ "No crab")) %>% 
-   mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
-                               nutrients == "N" ~ "Ambient")) %>%  
-  ggplot() +
-  geom_pointrange(aes(x = Crab, y = response,
-                      ymin = asymp.LCL, ymax = asymp.UCL), 
-                  color = "black", size = 0.8, linewidth = 1.5,
-                  position = position_dodge2(width = 0.75)) +
-  # make a new color scale
-  ggnewscale::new_scale_color() +
-  #geom_boxplot(aes(x = Crab, y = tissue_loss_5_percent, fill = Nutrients), 
-  #             data = metadata_2,
-  #             size = 1,
-  #             outlier.shape = NA) + 
-  geom_point(aes(x = Crab, y = tissue_loss_5_percent,
-                 size = dflav_density_per_1000cm3,
-                 color = Nutrients),
-             data = metadata_2,
-             alpha = 0.5,
-             position = position_jitterdodge(jitter.width = 0.2,
-                                             jitter.height = 0,
-                                             dodge.width = 0.75)) +
-  scale_color_manual(values = c("Enriched" = n.color, "Ambient" = b.color)) +
-  scale_size_continuous(name = expression(paste(italic("D. flavicaudus"), " density"))) +
-  theme(text = element_text(size=12),
-        panel.border = element_rect(color="black", size = 2.3),
-        legend.position = "right",
-        axis.text.x = element_text(size = 17),
-        axis.text.y = element_text(size = 12)) +
-  ylab("Tissue loss (%)") +
-  xlab("")
 
 dev.off()
 ```
