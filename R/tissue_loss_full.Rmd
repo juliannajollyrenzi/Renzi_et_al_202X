@@ -27,7 +27,8 @@ librarian::shelf(here, # relative file paths
                  glmmTMB, # modeling
                  DHARMa, # for residual exploration: normality of residuals, dispersion, etc.
                  patchwork, # for putting figures together
-                 performance # model residuals
+                 performance, # model residuals
+                 emmeans 
                  )
 ```
 
@@ -171,6 +172,42 @@ emm.tl %>%
 
 ```{r}
 metadata %>% 
+  ggplot(aes(x = dflav_density_per_1000cm3, y = tissue_loss_5_percent)) +
+  geom_point(aes(color = treatment),
+             size = 2.5,
+             alpha = 0.7) +
+  ylab("Tissue loss (%)") +
+  scale_color_manual(name = "Treatment",
+                     values = c("Both" = b.color, "Nutrient" = n.color,
+                                "Crab" = crab.color, "Control" = control.color)) +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", size = 2.3),
+        legend.position = "right") +
+  xlab(expression(paste(italic("D. flavicaudus"), "/1000", cm^3))) -> panelB
+  
+```
+
+
+# Plot together
+
+```{r}
+pdf(here("figures", "tissue_loss_dflav.pdf"), height = 4, width = 13)
+
+
+panelA + panelB + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
+                            tag_suffix = ')')
+
+
+dev.off()
+```
+
+
+# Old plots
+
+Old version (binary):
+
+```{r}
+metadata %>% 
   # clean up values for plotting
   mutate(tissue_loss_binary = case_when(tissue_loss_binary == 1 ~ "Tissue loss",
                                         tissue_loss_binary == 0 ~ "No tissue loss")) %>% 
@@ -192,19 +229,4 @@ metadata %>%
         legend.position = "right") +
   xlab(expression(paste(italic("D. flavicaudus"), "/1000", cm^3))) -> panelB
 ```
-
-# Plot together
-
-```{r}
-pdf(here("figures", "tissue_loss_dflav.pdf"), height = 4, width = 13)
-
-
-panelA + panelB + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
-                            tag_suffix = ')')
-
-
-dev.off()
-```
-
-
 
