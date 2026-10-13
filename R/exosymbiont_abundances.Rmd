@@ -79,15 +79,28 @@ metadata <- read_csv(here("data", "metadata.csv")) %>%
                                nutrients == "N" ~ "Ambient")) %>% 
   mutate(Crab = case_when(crab == "Y" ~ "Crab",
                                crab == "N" ~ "No crab"))
+
+# coral volumes (with eaten coral included, since this is about what corals we selected)
+coral_vols <- read_csv(here("data", "metadata.csv"))
 ```
 
 # Volume differences
 
 We want to: 
-1. Make sure there are no differences in volume among treatments 
-2. Examine the effect of coral volume on total exosymbiont abundance
+1. Get average volume statistics for the manuscript
+2. Make sure there are no differences in volume among treatments 
+3. Examine the effect of coral volume on total exosymbiont abundance
 
-For that, first we need to calculate the total number of exosymbionts per colony and then join that information with our metadata on coral volume 
+First, get average statistics (with eaten coral included, since this is about what corals we selected):
+
+```{r}
+coral_vols %>% 
+  summarize(mean_vol = mean(coral_vol_cm3),
+            sd_vol = sd(coral_vol_cm3),
+            se_vol = sd_vol/sqrt(n()))
+```
+
+For #2 and #3, first we need to calculate the total number of exosymbionts per colony and then join that information with our metadata on coral volume 
 
 ```{r get total macrosymbionts per colony and join metadata}
 exosym %>% 
@@ -152,6 +165,7 @@ total_abund %>%
                outlier.shape = NA) + 
   geom_point(size = 2.2,
              color = "black",
+             alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
@@ -289,7 +303,7 @@ emm.dflav %>%
   ggnewscale::new_scale_color() +
   geom_jitter(data = metadata,
               aes(x = Nutrients, y = dflav_density_per_1000cm3, color = Crab), 
-              height = 0, width = 0.1, size = 2) +
+              height = 0, width = 0.1, size = 2, alpha = 0.65) +
   scale_color_manual(values = c("No crab" = control.color, "Crab" = crab.color), 
                      name = "") +
   ylab(expression(paste("Predicted abundance/1000", cm^3))) +
@@ -386,7 +400,7 @@ emm.gmono %>%
   ggnewscale::new_scale_color() +
   geom_jitter(data = metadata,
               aes(x = Crab, y = gmono_density_per_1000cm3, color = Nutrients),
-              height = 0, width = 0.1, size = 2) +
+              alpha = 0.65, height = 0, width = 0.1, size = 2) +
   scale_color_manual(values = c("Ambient" = b.color, "Enriched" = n.color), 
                      name = "") +
   ylab(expression(paste("Predicted abundance/1000", cm^3))) +
@@ -404,6 +418,41 @@ pdf(here("figures", "parasite_mutualist_predictions.pdf"), height = 5.5, width =
 
 plt.gmono + plt.dflav + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
                             tag_suffix = ')')
+
+dev.off()
+```
+
+
+# G. mono - Trapezia plot 
+
+From Craig's comment:
+
+```{r}
+pdf(here("figures", "mean_trap_vs_Gmono.pdf"), height = 4, width = 7)
+metadata %>% 
+  ungroup() %>% 
+  rowwise() %>% 
+  mutate(average_crab = case_when(
+    # if there were 2 crabs to start with, add them here
+    crab == "Y" ~ mean(c(2, tbiden_1_month, tbiden_13_month)),
+    crab == "N" ~ mean(c(0, tbiden_1_month, tbiden_13_month))
+  )
+           ) %>% 
+  # what if we get rid of the outlier?
+  #filter(coral_id != 24) %>% 
+  ggplot(aes(x = average_crab, y = gmono_density_per_1000cm3)) +
+  geom_point(aes(color = treatment),
+             size = 2.5,
+             alpha = 0.65) +
+  #geom_smooth(method = "lm") +
+  scale_color_manual(name = "Treatment",
+                     values = c("Both" = b.color, "Nutrient" = n.color,
+                                "Crab" = crab.color, "Control" = control.color)) +
+  theme(text = element_text(size=20),
+        panel.border = element_rect(color="black", size = 2.3),
+        legend.position = "right") +
+  xlab((expression(paste("Mean ", italic("Trapezia"), " abundance")))) +
+  ylab(expression(paste(italic("G. monodonta"), "/1000", cm^3)))
 
 dev.off()
 ```

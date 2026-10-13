@@ -61,7 +61,9 @@ water <- read_csv(here("data", "water_nutrients.csv"))
 metadata <- read_csv(here("data", "metadata.csv"))
 ```
 
-# Plot
+# Get averages for manuscript text
+
+First replace samples below the detection limit
 
 ```{r join with metadata}
 water %>% 
@@ -70,6 +72,19 @@ water %>%
   mutate(nitrite_nitrate_umol = case_when(nitrite_nitrate_belowlimit == "Y" ~ 0.1, 
                                           TRUE ~ nitrite_nitrate_umol)) -> water_nutrients
 ```
+
+Then calculate averages
+
+```{r}
+water_nutrients %>% 
+  group_by(timepoint, nutrients) %>% 
+  summarize(mean_nitrite_nitrate_umol = mean(nitrite_nitrate_umol),
+            sd_nitrite_nitrate_umol = sd(nitrite_nitrate_umol),
+            se_nitrite_nitrate_umol = sd_nitrite_nitrate_umol/sqrt(n())) 
+```
+
+
+# Plot
 
 ```{r plot}
 pdf(here("figures", "water_nutrients.pdf"), height = 4.5, width = 6.5)

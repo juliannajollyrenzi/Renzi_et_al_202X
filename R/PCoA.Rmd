@@ -1,0 +1,186 @@
+---
+title: "PCoA"
+author: "Julianna Renzi"
+date: "2025-09-30"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r clear environment}
+# clear environment for maximum reproducibility
+rm(list=ls())
+```
+
+```{r load packages}
+# load librarian (package for installing/loading packages)
+if (!require("librarian")) install.packages("librarian")
+
+# load requried packages
+librarian::shelf(here, # relative file paths 
+                 tidyverse, # data wrangling
+                 BlakeRMills/MoMAColors, # color palette
+                 
+                 # PCoA
+                 vegan,
+                 
+                 # IF WE RUN THE SEM
+                 piecewiseSEM, # structural equation modeling
+                 semEff, # indirect effect p-values
+                 glmmTMB,
+                 performance # check models
+                 )
+```
+
+```{r explicitly assign functions if needed}
+# make sure correct functions attached to the correct packages
+summarize <- dplyr::summarize
+group_by <- dplyr::group_by
+select <- dplyr::select
+```
+
+```{r set seed}
+set.seed(0429)
+```
+
+# Set the color palette and graphics
+
+```{r consistent color palette by treatment}
+colorz <- moma.colors("Warhol", n=15, type="discrete")
+
+b.color <- colorz[3]
+control.color <- colorz[9]
+crab.color <- colorz[1]
+n.color <- colorz[6]
+```
+
+```{r set graphing theme}
+# ggplot theme
+theme_set(
+  theme_bw(base_size = 20) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    theme(text = element_text(size=20)) 
+) 
+```
+
+# Read in data
+
+```{r}
+physiology_1 <- read_csv(here("data", "physiology.csv"))
+metadata <- read_csv(here("data", "metadata.csv"))
+```
+
+# Join data
+
+```{r}
+physiology_1 %>% 
+  inner_join(metadata) -> physiology_2
+```
+
+# Compute dissimilarity matrix
+
+Get just the physio data
+
+```{r}
+physiology_2 %>% 
+  select(protein_change, carb_change, endosym_percent_change, tissue_loss_5_percent) -> physiology_3
+```
+
+Compute the distance matrix
+
+```{r}
+distance_1 <- dist(physiology_3, method = "euclidean") # using Euclidean because data are negative (changes)
+```
+
+# Run PCoA
+
+```{r}
+library(ape) # somehow deals with the correction? Need to look into this
+pcoa_res <- pcoa(distance_1) 
+```
+
+Scree plot
+
+```{r}
+# 3. Scree plot
+scree_df <- data.frame(
+  Axis = 1:length(pcoa_res$values$Relative_eig),
+  Variance = pcoa_res$values$Relative_eig
+)
+
+ggplot(scree_df, aes(x = Axis, y = Variance)) +
+  geom_col(fill = "steelblue") +
+  geom_line(aes(group = 1), color = "black") +
+  geom_point(color = "black") +
+  theme_minimal() +
+  labs(x = "PCoA Axis", y = "Relative Eigenvalue",
+       title = "Scree Plot of PCoA Eigenvalues")
+
+# 4. Ordination plot of first two axes
+ordination_df <- data.frame(
+  Sample = rownames(pcoa_res$vectors),
+  Axis1 = pcoa_res$vectors[, 1],
+  Axis2 = pcoa_res$vectors[, 2]
+)
+
+ggplot(ordination_df, aes(x = Axis1, y = Axis2, label = Sample)) +
+  geom_point(color = "darkred", size = 3) +
+  geom_text(vjust = -0.5, size = 3) +
+  theme_minimal() +
+  labs(x = paste0("PCoA 1 (", round(pcoa_res$values$Relative_eig[1]*100, 1), "%)"),
+       y = paste0("PCoA 2 (", round(pcoa_res$values$Relative_eig[2]*100, 1), "%)"),
+       title = "PCoA Ordination (Euclidean distance)")
+```
+
+RAndom code I don't understand:
+```{r}
+# Extract ordination coordinates
+ordination_df <- data.frame(
+  Sample = rownames(pcoa_res$vectors),
+  Axis1 = pcoa_res$vectors[, 1],
+  Axis2 = pcoa_res$vectors[, 2]
+)
+
+# 3. Fit original variables (loadings)
+# Convert PCoA coordinates into a vegan-compatible ordination object
+ord <- list()
+ord$points <- ordination_df[, c("Axis1", "Axis2")]
+class(ord) <- "ordiplot"
+fit <- envfit(ord ~ ., data = as.data.frame(physiology_3))
+
+# Get scores (vector directions of variables)
+fit_scores <- as.data.frame(scores(fit, display = "vectors"))
+fit_scores$Var <- rownames(fit_scores)
+
+# 4. Plot with ggplot2
+ggplot(ordination_df, aes(x = Axis1, y = Axis2)) +
+  geom_point(color = "darkred", size = 3) +
+  geom_segment(data = fit_scores,
+               aes(x = 0, y = 0, xend = Axis1, yend = Axis2),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "blue") +
+  geom_text(data = fit_scores, aes(x = Axis1, y = Axis2, label = Var),
+            color = "blue", vjust = -0.5) +
+  theme_minimal() +
+  labs(x = paste0("PCoA 1 (", round(pcoa_res$values$Relative_eig[1]*100, 1), "%)"),
+       y = paste0("PCoA 2 (", round(pcoa_res$values$Relative_eig[2]*100, 1), "%)"),
+       title = "PCoA Ordination with Variable Loadings")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

@@ -69,6 +69,25 @@ physiology_1 <- read_csv(here("data", "physiology.csv"))
 metadata <- read_csv(here("data", "metadata.csv")) 
 ```
 
+# Test for differences in fragment size among treatments
+
+```{r}
+sa_data <- inner_join(metadata, physiology_1)
+```
+
+```{r}
+m.sa.T1 <- glmmTMB(sa_cm2_T1 ~ treatment + (1|block), family = Gamma(link = "log"), data = sa_data)
+```
+
+```{r}
+m.sa.T3 <- glmmTMB(sa_cm2_T3 ~ treatment + (1|block), family = Gamma(link = "log"), data = sa_data)
+```
+
+```{r}
+car::Anova(m.sa.T1, type = 2) # no differences
+car::Anova(m.sa.T3, type = 2) # no differences
+```
+
 # Protein change
 
 First, join the physiology data with the metadata 
@@ -93,6 +112,7 @@ physiology_2 %>%
                outlier.shape = NA) +
   geom_point(size = 2.2,
              color = "black",
+             alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
@@ -101,21 +121,21 @@ physiology_2 %>%
   xlab("") +
   ylab(expression(paste(Delta, " Protein (%)"))) +
   theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", fill = NA, size = 2.3),
+        panel.border = element_rect(color="black", fill = NA, linewidth = 2.3),
         legend.position = "none") -> protein.plt
 ```
 
 ## Model
 
 ```{r make model}
-m.prot.1 <- glmmTMB(protein_change ~ crab + nutrients + crab:nutrients + (1|block), 
+m.prot.1 <- glmmTMB(protein_change ~ crab + nutrients + crab:nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
                   family = gaussian("identity"),
                   data = physiology_2)
 ```
 
 ```{r test assumptions}
 # get residuals
-resid.m.prot.1 <- DHARMa::simulateResiduals(m.prot.1)
+resid.m.prot.1 <- DHARMa::simulateResiduals(m.prot.1, n = 1000)
 
 testResiduals(resid.m.prot.1, plot = T)
 testDispersion(resid.m.prot.1)
@@ -131,14 +151,14 @@ car::Anova(m.prot.1, type = 3, contrasts = list(nutrients = contr.sum, crab = co
 Drop interaction
 
 ```{r make model}
-m.prot.2 <- glmmTMB(protein_change ~ crab + nutrients + (1|block), 
+m.prot.2 <- glmmTMB(protein_change ~ crab + nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
                   family = gaussian("identity"),
                   data = physiology_2)
 ```
 
 ```{r test assumptions}
 # get residuals
-resid.m.prot.2 <- DHARMa::simulateResiduals(m.prot.2)
+resid.m.prot.2 <- DHARMa::simulateResiduals(m.prot.2, n = 1000)
 
 testResiduals(resid.m.prot.2, plot = T)
 testDispersion(resid.m.prot.2)
@@ -162,6 +182,7 @@ physiology_2 %>%
                outlier.shape = NA) +
   geom_point(size = 2.2,
              color = "black",
+             alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
@@ -177,14 +198,14 @@ physiology_2 %>%
 ## Model
 
 ```{r make model}
-m.carb.1 <- glmmTMB(carb_change ~ crab + nutrients + crab:nutrients + (1|block), 
+m.carb.1 <- glmmTMB(carb_change ~ crab + nutrients + crab:nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
                   family = gaussian(),
                   data = physiology_2)
 ```
 
 ```{r test assumptions}
 # get residuals
-resid.m.carb.1 <- DHARMa::simulateResiduals(m.carb.1)
+resid.m.carb.1 <- DHARMa::simulateResiduals(m.carb.1, n = 1000)
 
 testResiduals(resid.m.carb.1, plot = T)
 testDispersion(resid.m.carb.1)
@@ -200,14 +221,14 @@ car::Anova(m.carb.1, type = 3, contrasts = list(nutrients = contr.sum, crab = co
 Drop interaction term
 
 ```{r make model}
-m.carb.2 <- glmmTMB(carb_change ~ crab + nutrients + (1|block), 
+m.carb.2 <- glmmTMB(carb_change ~ crab + nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
                   family = gaussian(),
                   data = physiology_2)
 ```
 
 ```{r test assumptions}
 # get residuals
-resid.m.carb.2 <- DHARMa::simulateResiduals(m.carb.2)
+resid.m.carb.2 <- DHARMa::simulateResiduals(m.carb.2, n = 1000)
 
 testResiduals(resid.m.carb.2, plot = T)
 testDispersion(resid.m.carb.2)
@@ -222,9 +243,7 @@ car::Anova(m.carb.2, type = 2)
 
 # Tissue loss
 
-First, plot:
-
-## Old tissue loss plot:
+## Plot
 
 ```{r plot}
 # use metadata because want to include coral #25
@@ -237,54 +256,32 @@ metadata %>%
   ggplot(aes(x = Crab, y = tissue_loss_5_percent, fill = Nutrients)) +
   geom_boxplot(size = 1,
                outlier.shape = NA) +
-  geom_point(size = 2.2,
-             color = "black",
+  scale_fill_manual(values = c(b.color, n.color)) +
+  geom_point(
+             size = 2.2,
+             alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
-  scale_fill_manual(values = c(b.color, n.color)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   xlab("") +
   ylab("Tissue loss (%)") +
   theme(text = element_text(size=20),
         panel.border = element_rect(color="black", fill = NA, size = 2.3),
-        legend.position = "none") -> tl.plt.old
-```
-
-## New tissue loss plot:
-
-```{r plot}
-# use metadata because want to include coral #25
-metadata %>% 
-  # get column names/values nice for plotting
-  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
-                               nutrients == "N" ~ "Ambient")) %>% 
-  mutate(Crab = case_when(crab == "Y" ~ "Crab",
-                               crab == "N" ~ "No crab")) %>% 
-  group_by(Crab, Nutrients, treatment) %>% 
-  summarize(sum_TL_binary = sum(tissue_loss_binary)) %>% 
-  ggplot(aes(x = Crab, y = sum_TL_binary, fill = Nutrients)) + 
-  geom_bar(stat = "identity",
-           position = "dodge") +
-  ylab("Corals with tissue loss") +
-  xlab("") +
-  scale_fill_manual(values = c("Ambient" = b.color, "Enriched" = n.color)) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", fill = NA, size = 2.3),
         legend.position = "none") -> tl.plt
 ```
 
-## Model: binary
+## Model: non-binary
 
 ```{r}
-m.tl.1 <- glmmTMB(tissue_loss_binary ~ crab + nutrients + crab:nutrients + (1|block), 
-                  family = binomial(link = "logit"),
+m.tl.1 <- glmmTMB(tissue_loss_5_percent ~ crab + nutrients + crab:nutrients + (1|block), 
+                  family = tweedie,
                   data = metadata)
 ```
 
 ```{r test assumptions}
 # get residuals
-resid.m.tl.1 <- DHARMa::simulateResiduals(m.tl.1)
+resid.m.tl.1 <- DHARMa::simulateResiduals(m.tl.1, n = 1000)
 
 testResiduals(resid.m.tl.1, plot = T)
 testDispersion(resid.m.tl.1)
@@ -297,17 +294,17 @@ check_model(m.tl.1)
 car::Anova(m.tl.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum)) 
 ```
 
-Drop the interaction term
+Drop interaction
 
 ```{r}
-m.tl.2 <- glmmTMB(tissue_loss_binary ~ crab + nutrients + (1|block), 
-                  family = binomial(link = "logit"),
+m.tl.2 <- glmmTMB(tissue_loss_5_percent ~ crab + nutrients + (1|block), 
+                  family = tweedie,
                   data = metadata)
 ```
 
 ```{r test assumptions}
 # get residuals
-resid.m.tl.2 <- DHARMa::simulateResiduals(m.tl.2)
+resid.m.tl.2 <- DHARMa::simulateResiduals(m.tl.2, n = 1000)
 
 testResiduals(resid.m.tl.2, plot = T)
 testDispersion(resid.m.tl.2)
@@ -331,6 +328,7 @@ physiology_2 %>%
                outlier.shape = NA) +
   geom_point(size = 2.2,
              color = "black",
+             alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
@@ -352,7 +350,7 @@ m.endo.1 <- glmmTMB(endosym_percent_change ~ crab + nutrients + crab:nutrients +
 
 ```{r test assumptions}
 # get residuals
-resid.m.endo.1 <- DHARMa::simulateResiduals(m.endo.1)
+resid.m.endo.1 <- DHARMa::simulateResiduals(m.endo.1, n = 1000)
 
 testResiduals(resid.m.endo.1, plot = T)
 testDispersion(resid.m.endo.1)
@@ -362,7 +360,7 @@ check_model(m.endo.1)
 ```
 
 ```{r examine results}
-car::Anova(m.endo.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
+car::Anova(m.endo.1, type = 3)
 ```
 
 Drop interaction term
@@ -375,7 +373,7 @@ m.endo.2 <- glmmTMB(endosym_percent_change ~ crab + nutrients + (1|block),
 
 ```{r test assumptions}
 # get residuals
-resid.m.endo.2 <- DHARMa::simulateResiduals(m.endo.2)
+resid.m.endo.2 <- DHARMa::simulateResiduals(m.endo.2, n = 1000)
 
 testResiduals(resid.m.endo.2, plot = T)
 testDispersion(resid.m.endo.2)

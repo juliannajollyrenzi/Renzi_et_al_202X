@@ -99,7 +99,8 @@ metadata %>%
   theme(plot.title = element_text(vjust = 1),
         panel.border = element_rect(color="black", size=2.3),
         legend.position = "none") +
-  xlab("") -> tbiden.2021 
+  xlab("") +
+  ggtitle("(a) After 5 weeks") -> tbiden.2021 
 ```
 
 ```{r plot summer 2022}
@@ -126,14 +127,14 @@ metadata %>%
   theme(plot.title = element_text(vjust = 1),
         panel.border = element_rect(color="black", size=2.3),
         legend.position = "none") +
-  xlab("") -> tbiden.2022
+  xlab("") +
+  ggtitle("(b) After 13 months") -> tbiden.2022
 ```
 
 ```{r plot together}
 pdf(here("figures", "tbiden_abundance.pdf"), height = 5, width = 12)
 
-tbiden.2021 + tbiden.2022 + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
-                            tag_suffix = ')')
+tbiden.2021 + tbiden.2022 
 
 
 dev.off()
