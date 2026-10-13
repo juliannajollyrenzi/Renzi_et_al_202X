@@ -234,7 +234,7 @@ check_model(m.even.1)
 ```
 
 ```{r examine results}
-car::Anova(m.even.1) 
+car::Anova(m.even.1, type = 3) 
 ```
 
 Drop interaction term
@@ -318,7 +318,7 @@ metadata %>%
 ## PERMANOVA
 
 ```{r}
-adonis2(taxa_mat_1 ~ crab + nutrients + crab:nutrients, 
+adonis2(taxa_mat_1[,-1] ~ crab + nutrients + crab:nutrients, 
         strata = metadata$block, 
         data = metadata, 
         method = "bray",
