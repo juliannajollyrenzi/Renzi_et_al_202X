@@ -130,7 +130,7 @@ water_nutrients %>%
 
 Variances are very unequal, so will use a Welch's t test
 
-```{r Welch's t-test - 4 days}
+```{r Welchs t-test - 4 days}
 var.test(log(nitrite_nitrate_umol) ~ nutrients, data = four_days)
 
 # test normality: nutrients
@@ -150,7 +150,7 @@ t.test(log(nitrite_nitrate_umol) ~ nutrients,
 
 Same for one month
 
-```{r Welch's t-test - 1 month}
+```{r Welchs t-test - 1 month}
 var.test(nitrite_nitrate_umol ~ nutrients, data = one_month)
 
 # test normality: nutrients
