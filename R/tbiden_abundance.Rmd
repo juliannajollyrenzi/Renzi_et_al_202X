@@ -78,21 +78,22 @@ Plot number of large T. bidentata after one month
 ```{r plot summer 2021}
 metadata %>% 
   # get column names/values nice for plotting
-  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
-                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Nutrients = factor(case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient"))) %>% 
   mutate(Crab = case_when(crab == "Y" ~ "Crab",
                                crab == "N" ~ "No crab")) %>% 
   # only looking at corals in the crab treatment
   filter(Crab == "Crab") %>% 
+  # get evenly spaced, centered rows of points at each y value (vs. dodge where they could overlap)
+  group_by(Nutrients, tbiden_1_month) %>% 
+  mutate(x_pos = as.numeric(Nutrients) + (row_number() - (n() + 1) / 2) * 0.08) %>% 
+  ungroup() %>%
   ggplot(aes(x = Nutrients, y = tbiden_1_month, fill = Nutrients)) +
   geom_boxplot(size = 1,
                outlier.shape = NA) +
-  geom_point(size = 2.2,
-             color = "black",
-             alpha = 0.65,
-             position = position_jitterdodge(jitter.width = 0.2,
-                                             jitter.height = 0,
-                                             dodge.width = 0.75)) +
+  geom_point(aes(x = x_pos),
+             size = 4,
+             color = "black") +
   scale_fill_manual(values = c("Enriched" = n.color,
                                "Ambient" = b.color)) +
   ylab(expression(paste("Large ", italic("T. bidentata")))) +
@@ -100,27 +101,29 @@ metadata %>%
         panel.border = element_rect(color="black", size=2.3),
         legend.position = "none") +
   xlab("") +
+  geom_hline(yintercept = 2, linetype = "dashed") +
   ggtitle("(a) After 5 weeks") -> tbiden.2021 
 ```
 
 ```{r plot summer 2022}
 metadata %>% 
   # get column names/values nice for plotting
-  mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
-                               nutrients == "N" ~ "Ambient")) %>% 
+  mutate(Nutrients = factor(case_when(nutrients == "Y" ~ "Enriched",
+                               nutrients == "N" ~ "Ambient"))) %>% 
   mutate(Crab = case_when(crab == "Y" ~ "Crab",
                                crab == "N" ~ "No crab")) %>% 
   # only looking at corals in the crab treatment
   filter(Crab == "Crab") %>% 
+  # get evenly spaced, centered rows of points at each y value (vs. dodge where they could overlap)
+  group_by(Nutrients, tbiden_13_month) %>% 
+  mutate(x_pos = as.numeric(Nutrients) + (row_number() - (n() + 1) / 2) * 0.08) %>% 
+  ungroup() %>% 
   ggplot(aes(x = Nutrients, y = tbiden_13_month, fill = Nutrients)) +
   geom_boxplot(size = 1,
                outlier.shape = NA) +
-  geom_point(size = 2.2,
-             color = "black",
-             alpha = 0.65,
-             position = position_jitterdodge(jitter.width = 0.2,
-                                             jitter.height = 0,
-                                             dodge.width = 0.75)) +
+  geom_point(aes(x = x_pos),
+             size = 4,
+             color = "black") +
   scale_fill_manual(values = c("Enriched" = n.color,
                                "Ambient" = b.color)) +
   ylab(expression(paste("Large ", italic("T. bidentata")))) +
@@ -128,6 +131,7 @@ metadata %>%
         panel.border = element_rect(color="black", size=2.3),
         legend.position = "none") +
   xlab("") +
+  geom_hline(yintercept = 2, linetype = "dashed")+
   ggtitle("(b) After 13 months") -> tbiden.2022
 ```
 
