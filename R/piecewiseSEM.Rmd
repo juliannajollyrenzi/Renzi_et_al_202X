@@ -196,7 +196,7 @@ Use the `semEff` package to calculate effects via bootstrapping
 # bootstrap and save standardized effects
 protein.sem.boot <- bootEff(sem.prot, R = 20000, 
                             seed = 0429,
-                            parallel = "multicore") 
+                            parallel = "multicore") # this is for calculating back to percentage points 
 
 # calculate direct, indirect, and total effects
 protein.sem.eff <- semEff(protein.sem.boot)
@@ -255,7 +255,6 @@ summary(protein.sem.eff,
                         Effect     Bias   Std. Err.   Lower CI Upper CI    
                         ------   ------   ---------   -------- --------    
  DIRECT:    nutrients |  0.336 | -0.001 |     0.139 |    0.008    0.566 | *
-
 
 # Carbohydrate model
 
@@ -335,3 +334,81 @@ summary(carb.sem.eff,
             endosym.change.scale |  0.038 | -0.003 |     0.051 |   -0.042    0.165 |  
 
             
+# Make protein model unscaled for percentage point change
+
+Use `protein_change` rather than `protein_change_scale`
+
+```{r}
+m.prot.raw <- glm(protein_change ~ nutrients + crab + interaction + endosym_change_scale + dflav_density_scale + gmono_density_scale + sa_T1_scale + sa_T3_scale,
+                  family = gaussian(link = "identity"), data = scaled_data)
+```
+
+```{r check model}
+check_model(m.prot.raw)
+  qqnorm(m.prot.raw$residuals)
+  qqline(m.prot.raw$residuals)
+```
+
+```{r}
+sem.prot.raw <- psem(m.dflav, 
+                     m.gmono, 
+                     m.endo, 
+                     m.prot.raw,
+                     gmono_density_scale %~~% sa_T3_scale,
+                     data = as.data.frame(scaled_data))
+```
+
+```{r}
+protein.raw.boot <- bootEff(sem.prot.raw, R = 20000, seed = 0429, parallel = "multicore", 
+                            incl.raw = TRUE) # this gets the raw values, rather than in SD's (standardized)
+```
+
+```{r}
+summary(semEff(protein.raw.boot, 
+               use.raw = TRUE), # use raw values to get percentage point change
+        response = "protein.change")
+```
+
+Response 'protein.change' (4/4):
+
+                                   Effect     Bias   Std. Err.   Lower CI Upper CI    
+                                   ------   ------   ---------   -------- --------    
+ DIRECT:    nutrients            | -0.938 |  0.075 |     0.242 |   -1.459   -0.536 | *
+            crab                 | -0.385 |  0.019 |     0.353 |   -1.088    0.301 |  
+            interaction          |  0.126 |  0.005 |     0.405 |   -0.637    0.960 |  
+            sa.T1.scale          | -0.931 |  0.089 |     0.197 |   -1.533   -0.657 | *
+            sa.T3.scale          |  0.357 | -0.021 |     0.148 |    0.098    0.689 | *
+            dflav.density.scale  |  0.636 | -0.037 |     0.188 |    0.362    1.142 | *
+            gmono.density.scale  | -0.367 |  0.049 |     0.158 |   -0.729   -0.113 | *
+            endosym.change.scale |  0.143 | -0.004 |     0.158 |   -0.136    0.497 |  
+                                 |        |        |           |                   |  
+ INDIRECT:  nutrients            |  0.783 | -0.067 |     0.236 |    0.452    1.523 | *
+            crab                 |  0.244 | -0.027 |     0.141 |    0.031    0.640 | *
+                                 |        |        |           |                   |  
+ TOTAL:     nutrients            | -0.155 |  0.007 |     0.265 |   -0.679    0.358 |  
+            crab                 | -0.141 | -0.007 |     0.365 |   -0.847    0.582 |  
+            interaction          |  0.126 |  0.005 |     0.405 |   -0.637    0.960 |  
+            sa.T1.scale          | -0.931 |  0.089 |     0.197 |   -1.533   -0.657 | *
+            sa.T3.scale          |  0.357 | -0.021 |     0.148 |    0.098    0.689 | *
+            dflav.density.scale  |  0.636 | -0.037 |     0.188 |    0.362    1.142 | *
+            gmono.density.scale  | -0.367 |  0.049 |     0.158 |   -0.729   -0.113 | *
+            endosym.change.scale |  0.143 | -0.004 |     0.158 |   -0.136    0.497 |  
+                                 |        |        |           |                   |  
+ MEDIATORS: dflav.density.scale  |  0.688 | -0.062 |     0.197 |    0.413    1.330 | *
+            gmono.density.scale  |  0.244 | -0.027 |     0.141 |    0.031    0.640 | *
+            endosym.change.scale |  0.095 | -0.005 |     0.114 |   -0.064    0.422 |  
+
+
+## Compare to average initial protein content (5.59% AFDW)
+
+```{r}
+# initial protein content
+init_prot <- 5.59
+
+# for direct effect of nutrients 
+-0.938/init_prot # ~-17%
+
+# for D. flavicaudus indirect effect
+0.688/init_prot # ~12%
+```
+

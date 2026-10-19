@@ -67,8 +67,8 @@ theme_set(
 ```{r}
 exosym <- read_csv(here("data", "exosymbionts.csv")) %>% 
   # exclude the coral that experienced 100% tissue loss
-  filter(coral_id != 25) # %>% 
-  # check without Trapeziids
+  filter(coral_id != 25)  # %>% 
+  # check without Trapeziids to see if they change any conclusions (we note no qualitative differences)
   # filter(taxa_group != "Trapeziidae")
 
 metadata <- read_csv(here("data", "metadata.csv")) %>% 
@@ -191,9 +191,8 @@ check_model(m.rich.2)
 Examine results
 
 ```{r examine results}
-car::Anova(m.rich.2, type = 2) 
+car::Anova(m.rich.2, type = 2) # also no effect if Trapezids are filtered out (edit initial chunk to check)
 ```
-
 
 # Evenness
 
@@ -256,7 +255,7 @@ check_model(m.even.2)
 ```
 
 ```{r examine results}
-car::Anova(m.even.2, type = 2) 
+car::Anova(m.even.2, type = 2) # also no effect if Trapezids are filtered out (edit initial chunk to check)
 ```
 
 # Beta diversity
@@ -279,7 +278,7 @@ Calculate dispersion
 betaDisper<- vegan::betadisper(bray_mat, metadata$treatment) 
 
 # are groups a good predictor of dispersion?
-anova(betaDisper) # no
+anova(betaDisper) # no & also no effect if Trapezids are filtered out (edit initial chunk to check)
 
 # plot of dispersion test
 plot(betaDisper, sub = "") 

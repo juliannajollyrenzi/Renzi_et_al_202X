@@ -68,7 +68,9 @@ theme_set(
 # full exosymbiont count data
 exosym <- read_csv(here("data", "exosymbionts.csv")) %>% 
   # exclude coral that experienced 100% tissue loss
-  filter(coral_id != 25)
+  filter(coral_id != 25) # %>% 
+  # check without Trapeziids to see if they change any conclusions (we note no qualitative differences)
+  # filter(taxa_group != "Trapeziidae")
 
 # metadata (treatments, block, coral volume, etc.)
 metadata <- read_csv(here("data", "metadata.csv")) %>% 
@@ -221,7 +223,7 @@ check_model(m.abund.2)
 ```
 
 ```{r examine results}
-car::Anova(m.abund.2, type = 2)
+car::Anova(m.abund.2, type = 2) # also no effect if Trapezids are filtered out (edit initial chunk to check)
 ```
 
 
