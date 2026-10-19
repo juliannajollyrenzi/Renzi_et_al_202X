@@ -171,6 +171,16 @@ check_model(m.prot.2)
 car::Anova(m.prot.2, type = 2) 
 ```
 
+Verify results are the same qualitatively without the SA adjustements
+
+```{r}
+m.prot.3 <- glmmTMB(protein_change ~ crab + nutrients + (1|block), 
+                  family = gaussian("identity"),
+                  data = physiology_2)
+
+car::Anova(m.prot.3, type = 2) # still no effect
+```
+
 # Carbohydrate change
 
 Plot differences among treatments
@@ -240,6 +250,17 @@ check_model(m.carb.2)
 ```{r examine results}
 car::Anova(m.carb.2, type = 2)
 ```
+
+Verify results are the same qualitatively without the SA adjustements
+
+```{r}
+m.carb.3 <- glmmTMB(carb_change ~ crab + nutrients + (1|block), 
+                  family = gaussian("identity"),
+                  data = physiology_2)
+
+car::Anova(m.carb.3, type = 2) # still no effect
+```
+
 
 # Tissue loss
 
