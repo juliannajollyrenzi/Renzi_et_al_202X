@@ -28,7 +28,8 @@ librarian::shelf(here, # relative file paths
                  glmmTMB, # linear models
                  car, # type II ANOVA
                  performance, # for residual exploration: normality of residuals, dispersion, etc.
-                 DHARMa # for residual/model fit exploration
+                 DHARMa, # for residual/model fit exploration
+                 ggtext # yaxis labels
                  )
 ```
 
@@ -56,10 +57,24 @@ n.color <- colorz[6]
 ```{r set graphing theme}
 # ggplot theme
 theme_set(
-  theme_bw(base_size = 20) +
+  theme_bw() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    theme(plot.title = element_text(vjust = -6))
-) 
+    theme(axis.text = element_text(colour = "black")) +
+    theme(
+      text       = element_text(size = 9, colour = "black"),
+      axis.text  = element_text(size = 8, colour = "black"),  # default is gray
+      axis.ticks = element_line(colour = "black", linewidth = 0.5),
+      axis.line  = element_line(linewidth = 0.5),
+      plot.tag   = element_text(size = 10),
+      panel.border = element_rect(color="black", fill = NA, size = 1),
+      axis.title.y = element_markdown(lineheight = 0.8))
+)
+
+# size for points
+pt_size <- 1.2
+
+# size for boxplot
+bxp_size <- 0.5
 ```
 
 # Read in data
@@ -131,9 +146,10 @@ Richness plot
 ```{r plot}
 taxa_diversity_2 %>% 
   ggplot(aes(x = Nutrients, y = richness, fill = Crab)) +
-  geom_boxplot(linewidth = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) + 
-  geom_point(size = 2.2,
+  geom_point(size = pt_size,
              color = "black",
              alpha= 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
@@ -141,9 +157,7 @@ taxa_diversity_2 %>%
                                              dodge.width = 0.75)) +
   ylab("Richness") +
   scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", fill = NA, size = 2.3),
-        legend.position = "none") -> rich.plt
+  theme(legend.position = "none") -> rich.plt
 ```
 
 ## Model
@@ -199,9 +213,10 @@ car::Anova(m.rich.2, type = 2) # also no effect if Trapezids are filtered out (e
 ```{r plot}
 taxa_diversity_2 %>% 
   ggplot(aes(x = Nutrients, y = evenness, fill = Crab)) +
-  geom_boxplot(size = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) + 
-  geom_point(size = 2.2,
+  geom_point(size = pt_size,
              color = "black",
              alpha= 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
@@ -209,9 +224,7 @@ taxa_diversity_2 %>%
                                              dodge.width = 0.75)) +
   scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) +
   ylab("Evenness") + 
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", size=2.3),
-        legend.position = "none") -> even.plt
+  theme(legend.position = "none") -> even.plt
 ```
 
 ## Model
@@ -238,7 +251,7 @@ car::Anova(m.even.1, type = 3)
 
 Drop interaction term
 
-```{r first model}
+```{r second model}
 m.even.2 <- glmmTMB((evenness) ~ crab + nutrients + (1|block),
                   family = Gamma(link = "log"),
                   data = taxa_diversity_2)
@@ -288,7 +301,7 @@ boxplot(betaDisper, main = "Treatment", xlab = "")
 Plot by hand. Get distances:
 
 ```{r}
-metadata$distance_centriod <- betaDisper$distances
+metadata$distance_median <- betaDisper$distances
 ```
 
 Plot
@@ -299,19 +312,18 @@ metadata %>%
                                crab == "N" ~ "No crab")) %>%
   mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
                                nutrients == "N" ~ "Ambient")) %>% 
-  ggplot(aes(x = Nutrients, y = distance_centriod, fill = Crab)) +
-  geom_boxplot(size = 1,
+  ggplot(aes(x = Nutrients, y = distance_median, fill = Crab)) +
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) + 
-  geom_point(size = 2.2,
+  geom_point(size = pt_size,
              color = "black",
              alpha= 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
-  ylab("Distance to centroid") +
-  scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) + 
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", size=2.3)) -> beta.plt
+  ylab("Distance to spatial median<br>(Bray-Curtis)") +
+  scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) -> beta.plt
 ```
 
 ## PERMANOVA
@@ -327,14 +339,16 @@ adonis2(taxa_mat_1[,-1] ~ crab + nutrients + crab:nutrients,
 ## Plot all together
 
 ```{r}
-pdf(here("figures", "evenness_and_richness.pdf"), height = 9.5, width = 13)
+cairo_pdf(here("figures", "Figure S4.pdf"), height = 4, width = 6)
 
 
 "AABB
 #CC#" -> layout
 
-rich.plt + even.plt + beta.plt + plot_layout(design = layout) + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
-                            tag_suffix = ')')
+rich.plt + even.plt + beta.plt + plot_layout(design = layout) + 
+  plot_annotation(tag_levels = c('a'), 
+                  tag_prefix = '(',
+                  tag_suffix = ')')
 
 
 

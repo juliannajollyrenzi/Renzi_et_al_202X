@@ -22,7 +22,8 @@ if (!require("librarian")) install.packages("librarian")
 # load requried packages
 librarian::shelf(here, # relative file paths 
                  tidyverse, # data wrangling
-                 BlakeRMills/MoMAColors # color palette
+                 BlakeRMills/MoMAColors, # color palette
+                 ggtext # yaxis labels
                  )
 ```
 
@@ -46,11 +47,25 @@ n.color <- colorz[6]
 ```{r set graphing theme}
 # ggplot theme
 theme_set(
-  theme_bw(base_size = 20) +
+  theme_bw() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    theme(text = element_text(size=20)) +
-    theme(plot.title = element_text(vjust = -6))
-) 
+    theme(axis.text = element_text(colour = "black")) +
+    theme(
+      text       = element_text(size = 9, colour = "black"),
+      axis.text  = element_text(size = 8, colour = "black"),  # default is gray
+      axis.ticks = element_line(colour = "black", linewidth = 0.5),
+      axis.line  = element_line(linewidth = 0.5),
+      plot.tag   = element_text(size = 10),
+      panel.border = element_rect(color="black", fill = NA, size = 1),
+      axis.title.y = element_markdown(lineheight = 0.8),
+      axis.title.x = element_markdown(lineheight = 0.8))
+)
+
+# size for points
+pt_size <- 1.2
+
+# size for boxplot
+bxp_size <- 0.5
 ```
 
 # Read in data
@@ -69,8 +84,8 @@ First replace samples below the detection limit
 water %>% 
   inner_join(metadata) %>% 
   # replace detection limit with 0.10
-  mutate(nitrite_nitrate_umol = case_when(nitrite_nitrate_belowlimit == "Y" ~ 0.1, 
-                                          TRUE ~ nitrite_nitrate_umol)) -> water_nutrients
+  mutate(nitrite_nitrate_uM = case_when(nitrite_nitrate_belowlimit == "Y" ~ 0.1, 
+                                          TRUE ~ nitrite_nitrate_uM)) -> water_nutrients
 ```
 
 Then calculate averages
@@ -78,17 +93,15 @@ Then calculate averages
 ```{r}
 water_nutrients %>% 
   group_by(timepoint, nutrients) %>% 
-  summarize(mean_nitrite_nitrate_umol = mean(nitrite_nitrate_umol),
-            sd_nitrite_nitrate_umol = sd(nitrite_nitrate_umol),
-            se_nitrite_nitrate_umol = sd_nitrite_nitrate_umol/sqrt(n())) 
+  summarize(mean_nitrite_nitrate_uM = mean(nitrite_nitrate_uM),
+            sd_nitrite_nitrate_uM = sd(nitrite_nitrate_uM),
+            se_nitrite_nitrate_uM = sd_nitrite_nitrate_uM/sqrt(n())) 
 ```
 
 
 # Plot
 
 ```{r plot}
-pdf(here("figures", "water_nutrients.pdf"), height = 4.5, width = 6.5)
-
 water_nutrients %>% 
   # get column names/values nice for plotting
   mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
@@ -99,24 +112,32 @@ water_nutrients %>%
                                timepoint == "2" ~ "1 month",
                                TRUE ~ "ALERT")) %>% 
   mutate(timepoint = factor(timepoint, levels = c("4 days", "1 month"))) %>% 
-  ggplot(aes(x = as.factor(timepoint), y = nitrite_nitrate_umol, fill = Nutrients)) +
-  geom_boxplot(size = 1,
+  ggplot(aes(x = as.factor(timepoint), y = nitrite_nitrate_uM, fill = Nutrients)) +
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) +
   geom_point(aes(color = Nutrients),
-             size = 2.2, alpha = 0.5,
+             size = pt_size, alpha = 0.5,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
   scale_fill_manual(values = c(b.color, n.color)) +
   scale_color_manual(values = c(b.color, "black")) +
   xlab("") +
-  ylab(expression(paste("Nitrite + Nitrate (", mu, "mol)"))) +
-  theme(text = element_text(size=20), 
-        panel.border = element_rect(color="black", size=2.3, linetype="solid"),
-        legend.position = "top")
+  ylab("Nitrite + Nitrate (\u00b5M)") +
+  theme(legend.position = "top") -> nut.plt
+```
+
+Save
+
+```{r}
+cairo_pdf(here("figures", "Figure S2.pdf"), height = 2.5, width = 3.5)
+
+nut.plt
 
 dev.off()
 ```
+
 
 # Model
 

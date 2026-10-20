@@ -27,7 +27,8 @@ librarian::shelf(here, # relative file paths
                  glmmTMB, # for models
                  DHARMa, # for residuals
                  performance, # also for residuals
-                 car # for type II ANOVAs
+                 car, # for type II ANOVAs
+                 ggtext # yaxis labels
                  )
 ```
 
@@ -55,11 +56,24 @@ n.color <- colorz[6]
 ```{r set graphing theme}
 # ggplot theme
 theme_set(
-  theme_bw(base_size = 20) +
+  theme_bw() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    theme(text = element_text(size=20)) +
-    theme(plot.title = element_text(vjust = -6))
-) 
+    theme(axis.text = element_text(colour = "black")) +
+    theme(
+      text       = element_text(size = 9, colour = "black"),
+      axis.text  = element_text(size = 8, colour = "black"),  # default is gray
+      axis.ticks = element_line(colour = "black", linewidth = 0.5),
+      axis.line  = element_line(linewidth = 0.5),
+      plot.tag   = element_text(size = 10),
+      panel.border = element_rect(color="black", fill = NA, size = 1),
+      axis.title.y = element_markdown(lineheight = 0.8))
+)
+
+# size for points
+pt_size <- 1.2
+
+# size for boxplot
+bxp_size <- 0.5
 ```
 
 # Read in data
@@ -89,16 +103,16 @@ metadata %>%
   mutate(x_pos = as.numeric(Nutrients) + (row_number() - (n() + 1) / 2) * 0.08) %>% 
   ungroup() %>%
   ggplot(aes(x = Nutrients, y = tbiden_1_month, fill = Nutrients)) +
-  geom_boxplot(size = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) +
   geom_point(aes(x = x_pos),
-             size = 4,
+             size = pt_size,
              color = "black") +
   scale_fill_manual(values = c("Enriched" = n.color,
                                "Ambient" = b.color)) +
-  ylab(expression(paste("Large ", italic("T. bidentata")))) +
-  theme(plot.title = element_text(vjust = 1),
-        panel.border = element_rect(color="black", size=2.3),
+  ylab("Large *T. bidentata*<br>(no. per colony)") +
+  theme(plot.title = element_text(vjust = 1, size = 10),
         legend.position = "none") +
   xlab("") +
   geom_hline(yintercept = 2, linetype = "dashed") +
@@ -119,16 +133,16 @@ metadata %>%
   mutate(x_pos = as.numeric(Nutrients) + (row_number() - (n() + 1) / 2) * 0.08) %>% 
   ungroup() %>% 
   ggplot(aes(x = Nutrients, y = tbiden_13_month, fill = Nutrients)) +
-  geom_boxplot(size = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) +
   geom_point(aes(x = x_pos),
-             size = 4,
+             size = pt_size,
              color = "black") +
   scale_fill_manual(values = c("Enriched" = n.color,
                                "Ambient" = b.color)) +
-  ylab(expression(paste("Large ", italic("T. bidentata")))) +
-  theme(plot.title = element_text(vjust = 1),
-        panel.border = element_rect(color="black", size=2.3),
+  ylab("Large *T. bidentata*<br>(no. per colony)") +
+  theme(plot.title = element_text(vjust = 1, size = 10),
         legend.position = "none") +
   xlab("") +
   geom_hline(yintercept = 2, linetype = "dashed")+
@@ -136,10 +150,11 @@ metadata %>%
 ```
 
 ```{r plot together}
-pdf(here("figures", "tbiden_abundance.pdf"), height = 5, width = 12)
+cairo_pdf(here("figures", "Figure 2.pdf"), height = 2.5, width = 5.5)
 
-tbiden.2021 + tbiden.2022 
-
+tbiden.2021 + tbiden.2022 + 
+  plot_annotation(title = "Figure 2",
+                  theme = theme(plot.title = element_text(size = 10)))
 
 dev.off()
 ```

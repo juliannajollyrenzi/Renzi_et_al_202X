@@ -28,7 +28,8 @@ librarian::shelf(here, # relative file paths
                  DHARMa, # for residual exploration: normality of residuals, dispersion, etc.
                  patchwork, # for putting figures together
                  performance, # model residuals
-                 emmeans 
+                 emmeans,
+                 ggtext # yaxis labels
                  )
 ```
 
@@ -56,10 +57,29 @@ n.color <- colorz[6]
 ```{r set graphing theme}
 # ggplot theme
 theme_set(
-  theme_bw(base_size = 20) +
+  theme_bw() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    theme(text = element_text(size=20)) 
-) 
+    theme(axis.text = element_text(colour = "black")) +
+    theme(
+      text       = element_text(size = 9, colour = "black"),
+      axis.text  = element_text(size = 8, colour = "black"),  # default is gray
+      axis.ticks = element_line(colour = "black", linewidth = 0.5),
+      axis.line  = element_line(linewidth = 0.5),
+      plot.tag   = element_text(size = 10),
+      panel.border = element_rect(color="black", fill = NA, size = 1),
+      axis.title.y = element_markdown(lineheight = 0.8),
+      axis.title.x = element_markdown(lineheight = 0.8))
+)
+
+# size for points
+pt_size <- 1.2
+
+# size for boxplot
+bxp_size <- 0.5
+
+# size for point range
+ptrg_size <- 0.5
+linrg_size <- 0.5
 ```
 
 # Read in data
@@ -100,7 +120,7 @@ check_model(resid.m.tl.full.1)
 ```
 
 ```{r examine results}
-car::Anova(m.tl.full.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
+car::Anova(m.tl.full.1, type = 3)
 ```
 
 ```{r}
@@ -145,13 +165,13 @@ emm.tl %>%
   ggplot() +
   geom_pointrange(aes(x = Treatment, y = response,
                       ymin = asymp.LCL, ymax = asymp.UCL), 
-                  color = "black", size = 0.8, linewidth = 1.5,
+                  color = "black", size = ptrg_size, linewidth = linrg_size,
                   position = position_dodge2(width = 0.75)) +
   # make a new color scale
   ggnewscale::new_scale_color() +
   geom_point(aes(x = Treatment, y = tissue_loss_5_percent,
                  color = Treatment),
-             size = 2.5,
+             size = pt_size,
              data = metadata_2,
              alpha = 0.7,
              position = position_jitterdodge(jitter.width = 0.2,
@@ -159,11 +179,7 @@ emm.tl %>%
                                              dodge.width = 0.75)) +
   scale_color_manual(values = c("Both" = b.color, "Nutrient" = n.color,
                                 "Crab" = crab.color, "Control" = control.color)) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", size = 2.3),
-        legend.position = "none",
-        axis.text.x = element_text(size = 17),
-        axis.text.y = element_text(size = 12)) +
+  theme(legend.position = "none") +
   ylab("Tissue loss (%)") +
   xlab("") -> panelA
 ```
@@ -174,59 +190,31 @@ emm.tl %>%
 metadata %>% 
   ggplot(aes(x = dflav_density_per_1000cm3, y = tissue_loss_5_percent)) +
   geom_point(aes(color = treatment),
-             size = 2.5,
+             size = pt_size,
              alpha = 0.7) +
   ylab("Tissue loss (%)") +
   scale_color_manual(name = "Treatment",
                      values = c("Both" = b.color, "Nutrient" = n.color,
                                 "Crab" = crab.color, "Control" = control.color)) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", size = 2.3),
-        legend.position = "right") +
-  xlab(expression(paste(italic("D. flavicaudus"), "/1000", cm^3))) -> panelB
-  
+  theme(legend.position = "right") +
+  xlab("*D. flavicaudus* density<br>(no. individuals/1000 cm<sup>3</sup>)") -> panelB
 ```
 
 
 # Plot together
 
 ```{r}
-pdf(here("figures", "tissue_loss_dflav.pdf"), height = 4, width = 13)
+cairo_pdf(here("figures", "Figure 5.pdf"), height = 2.5, width = 5.5)
 
 
-panelA + panelB + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
+panelA + panelB + 
+   plot_annotation(title = "Figure 2",
+                  theme = theme(plot.title = element_text(size = 10)),
+                  tag_levels = c('a'), tag_prefix = '(',
                             tag_suffix = ')')
 
 
 dev.off()
 ```
 
-
-# Old plots
-
-Old version (binary):
-
-```{r}
-metadata %>% 
-  # clean up values for plotting
-  mutate(tissue_loss_binary = case_when(tissue_loss_binary == 1 ~ "Tissue loss",
-                                        tissue_loss_binary == 0 ~ "No tissue loss")) %>% 
-  ggplot(aes(y = as.factor(tissue_loss_binary), x = dflav_density_per_1000cm3, group = tissue_loss_binary)) + 
-  geom_boxplot(size = 1, 
-               outlier.shape = NA) +
-  geom_point(aes(color = treatment),
-             size = 2.5,
-             alpha = 0.7,
-             position = position_jitterdodge(jitter.width = 0.1,
-                                             jitter.height = 0,
-                                             dodge.width = 0.75)) +
-  scale_color_manual(name = "Treatment",
-                     values = c("Both" = b.color, "Nutrient" = n.color,
-                                "Crab" = crab.color, "Control" = control.color)) +
-  ylab("") +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", size = 2.3),
-        legend.position = "right") +
-  xlab(expression(paste(italic("D. flavicaudus"), "/1000", cm^3))) -> panelB
-```
 

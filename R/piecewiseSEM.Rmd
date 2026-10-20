@@ -52,15 +52,6 @@ crab.color <- colorz[1]
 n.color <- colorz[6]
 ```
 
-```{r set graphing theme}
-# ggplot theme
-theme_set(
-  theme_bw(base_size = 20) +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    theme(text = element_text(size=20)) 
-) 
-```
-
 # Read in data
 
 ```{r}

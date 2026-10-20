@@ -27,7 +27,8 @@ librarian::shelf(here, # relative file paths
                  glmmTMB, # modeling
                  DHARMa, # for residual exploration: normality of residuals, dispersion, etc.
                  patchwork, # for putting figures together
-                 performance # model residuals
+                 performance, # model residuals
+                 ggtext # yaxis labels
                  )
 ```
 
@@ -55,10 +56,24 @@ n.color <- colorz[6]
 ```{r set graphing theme}
 # ggplot theme
 theme_set(
-  theme_bw(base_size = 20) +
+  theme_bw() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    theme(text = element_text(size=20)) 
-) 
+    theme(axis.text = element_text(colour = "black")) +
+    theme(
+      text       = element_text(size = 9, colour = "black"),
+      axis.text  = element_text(size = 8, colour = "black"),  # default is gray
+      axis.ticks = element_line(colour = "black", linewidth = 0.5),
+      axis.line  = element_line(linewidth = 0.5),
+      plot.tag   = element_text(size = 10),
+      panel.border = element_rect(color="black", fill = NA, size = 1),
+      axis.title.y = element_markdown(lineheight = 0.8))
+)
+
+# size for points
+pt_size <- 1.2
+
+# size for boxplot
+bxp_size <- 0.5
 ```
 
 # Read in data
@@ -76,11 +91,11 @@ sa_data <- inner_join(metadata, physiology_1)
 ```
 
 ```{r}
-m.sa.T1 <- glmmTMB(sa_cm2_T1 ~ treatment + (1|block), family = Gamma(link = "log"), data = sa_data)
+m.sa.T1 <- glmmTMB(sa_cm2_T1 ~ treatment, family = Gamma(link = "log"), data = sa_data)
 ```
 
 ```{r}
-m.sa.T3 <- glmmTMB(sa_cm2_T3 ~ treatment + (1|block), family = Gamma(link = "log"), data = sa_data)
+m.sa.T3 <- glmmTMB(sa_cm2_T3 ~ treatment, family = Gamma(link = "log"), data = sa_data)
 ```
 
 ```{r}
@@ -108,9 +123,10 @@ Then, plot differences among treatments
 ```{r plot}
 physiology_2 %>% 
   ggplot(aes(x = Crab, y = protein_change, fill = Nutrients)) +
-  geom_boxplot(size = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) +
-  geom_point(size = 2.2,
+  geom_point(size = pt_size,
              color = "black",
              alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
@@ -119,10 +135,8 @@ physiology_2 %>%
   scale_fill_manual(values = c(b.color, n.color)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   xlab("") +
-  ylab(expression(paste(Delta, " Protein (%)"))) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", fill = NA, linewidth = 2.3),
-        legend.position = "none") -> protein.plt
+  ylab("Δ Protein<br>content (p.p.)") +
+  theme(legend.position = "none") -> protein.plt
 ```
 
 ## Model
@@ -188,9 +202,10 @@ Plot differences among treatments
 ```{r plot}
 physiology_2 %>% 
   ggplot(aes(x = Crab, y = carb_change, fill = Nutrients)) +
-  geom_boxplot(size = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) +
-  geom_point(size = 2.2,
+  geom_point(size = pt_size,
              color = "black",
              alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
@@ -199,10 +214,8 @@ physiology_2 %>%
   scale_fill_manual(values = c(b.color, n.color)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   xlab("") +
-  ylab(expression(paste(Delta, " Carbohydrate (%)"))) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", fill = NA, size = 2.3),
-        legend.position = "none") -> carb.plt
+  ylab("Δ Carbohydrate<br>content (p.p.)") +
+  theme(legend.position = "none") -> carb.plt
 ```
 
 ## Model
@@ -275,21 +288,19 @@ metadata %>%
   mutate(Crab = case_when(crab == "Y" ~ "Crab",
                                crab == "N" ~ "No crab")) %>% 
   ggplot(aes(x = Crab, y = tissue_loss_5_percent, fill = Nutrients)) +
-  geom_boxplot(size = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) +
   scale_fill_manual(values = c(b.color, n.color)) +
-  geom_point(
-             size = 2.2,
+  geom_point(size = pt_size,
              alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   xlab("") +
-  ylab("Tissue loss (%)") +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", fill = NA, size = 2.3),
-        legend.position = "none") -> tl.plt
+  ylab("Coral tissue<br>loss (%)") +
+  theme(legend.position = "none") -> tl.plt
 ```
 
 ## Model: non-binary
@@ -345,9 +356,10 @@ First plot
 ```{r}
 physiology_2 %>% 
   ggplot(aes(x = Crab, y = endosym_percent_change, fill = Nutrients)) +
-  geom_boxplot(size = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) +
-  geom_point(size = 2.2,
+  geom_point(size = pt_size,
              color = "black",
              alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
@@ -356,9 +368,7 @@ physiology_2 %>%
   scale_fill_manual(values = c(b.color, n.color)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   xlab("") +
-  ylab(expression(paste("%", Delta, " Endosymbiont densities"))) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", fill = NA, size = 2.3)) -> endo.plt
+  ylab("Δ Endosymbiont <br>density (%)") -> endo.plt
 ```
 
 ## Model 
@@ -410,10 +420,13 @@ car::Anova(m.endo.2, type = 2)
 # Plot all together
 
 ```{r}
-pdf(here("figures/physiology_change_plots.pdf"), height = 9, width = 14)
+cairo_pdf(here("figures/Figure 1.pdf"), height = 4, width = 6)
 
-(protein.plt + carb.plt) / (tl.plt + endo.plt) + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
-                            tag_suffix = ')')
+(protein.plt + carb.plt) / (tl.plt + endo.plt) + plot_annotation(
+  title = "Figure 1",
+  theme = theme(plot.title = element_text(size = 10)),
+  tag_levels = c('a'), 
+  tag_prefix = '(', tag_suffix = ')')
 
 dev.off()
 ```

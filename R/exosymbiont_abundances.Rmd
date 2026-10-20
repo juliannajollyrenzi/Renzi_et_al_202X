@@ -28,7 +28,8 @@ librarian::shelf(here, # relative file paths
                  DHARMa, # for residual exploration: normality of residuals, dispersion, etc.
                  patchwork, # for putting figures together
                  performance, # for check homogeneity
-                 emmeans # for contrasts
+                 emmeans, # for contrasts
+                 ggtext # yaxis labels
                  )
 ```
 
@@ -56,10 +57,28 @@ n.color <- colorz[6]
 ```{r set graphing theme}
 # ggplot theme
 theme_set(
-  theme_bw(base_size = 20) +
+  theme_bw() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    theme(text = element_text(size=20)) 
-) 
+    theme(axis.text = element_text(colour = "black")) +
+    theme(
+      text       = element_text(size = 9, colour = "black"),
+      axis.text  = element_text(size = 8, colour = "black"),  # default is gray
+      axis.ticks = element_line(colour = "black", linewidth = 0.5),
+      axis.line  = element_line(linewidth = 0.5),
+      plot.tag   = element_text(size = 10),
+      panel.border = element_rect(color="black", fill = NA, size = 1),
+      axis.title.y = element_markdown(lineheight = 0.8))
+)
+
+# size for points
+pt_size <- 1.2
+
+# size for boxplot
+bxp_size <- 0.5
+
+# size for point range
+ptrg_size <- 0.5
+linrg_size <- 0.5
 ```
 
 # Read in data
@@ -152,9 +171,7 @@ total_abund %>%
 
 Visually examine differences in density
 
-```{r plot total abundance differences}
-pdf(here("figures", "total_macrosymbiont_density.pdf"), height = 5, width = 9)
-
+```{r}
 total_abund %>% 
   # get column names/values nice for plotting
   mutate(Nutrients = case_when(nutrients == "Y" ~ "Enriched",
@@ -163,19 +180,26 @@ total_abund %>%
                                crab == "N" ~ "No crab")) %>% 
   # plot
   ggplot(aes(x = Nutrients, y = density_1000cm3, fill = Crab)) +
-  geom_boxplot(size = 1,
+  geom_boxplot(size = bxp_size,
+               color = "black",
                outlier.shape = NA) + 
-  geom_point(size = 2.2,
+  geom_point(size = pt_size,
              color = "black",
              alpha = 0.65,
              position = position_jitterdodge(jitter.width = 0.1,
                                              jitter.height = 0,
                                              dodge.width = 0.75)) +
   scale_fill_manual(values = c("No crab" = control.color, "Crab" = crab.color)) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", size=2.3)) +
-  ylab(expression(paste("Exosymbiont abundance/1000", cm^3))) +
-  xlab("")
+  ylab("Exosymbiont density<br>(no. individuals/1000 cm<sup>3</sup>)") +
+  xlab("") -> plt.abund
+```
+
+Save
+
+```{r plot total abundance differences}
+cairo_pdf(here("figures", "total_macrosymbiont_density.pdf"), height = 2, width = 3.5)
+
+plt.abund
 
 dev.off()
 ```
@@ -300,18 +324,17 @@ emm.dflav %>%
   ggplot() +
   geom_pointrange(aes(x = Nutrients, y = response,
                       ymin = asymp.LCL, ymax = asymp.UCL), 
-                  size = 1.5, linewidth = 1.5, color = "black") +
+                  size = ptrg_size, linewidth = linrg_size, color = "black") +
   # make a new color scale
   ggnewscale::new_scale_color() +
   geom_jitter(data = metadata,
               aes(x = Nutrients, y = dflav_density_per_1000cm3, color = Crab), 
-              height = 0, width = 0.1, size = 2, alpha = 0.65) +
+              height = 0, width = 0.1, size = pt_size, alpha = 0.65) +
   scale_color_manual(values = c("No crab" = control.color, "Crab" = crab.color), 
                      name = "") +
-  ylab(expression(paste("Abundance/1000", cm^3))) +
+  ylab("*D. flavicaudus* density<br>(no. individuals/1000 cm<sup>3</sup>)") +
   xlab("Nutrient treatment") +
-  theme(legend.position = "top",
-        panel.border = element_rect(color="black", size=2.3)) +
+  theme(legend.position = "top") +
   xlab("") -> plt.dflav
 
 ```
@@ -397,18 +420,17 @@ emm.gmono %>%
   ggplot() +
   geom_pointrange(aes(x = Crab, y = response,
                       ymin = asymp.LCL, ymax = asymp.UCL), 
-                  color = "black", size = 1.5, linewidth = 1.5) +
+                  color = "black", size = ptrg_size, linewidth = linrg_size) +
   # make a new color scale
   ggnewscale::new_scale_color() +
   geom_jitter(data = metadata,
               aes(x = Crab, y = gmono_density_per_1000cm3, color = Nutrients),
-              alpha = 0.65, height = 0, width = 0.1, size = 2) +
+              alpha = 0.65, height = 0, width = 0.1, size = pt_size) +
   scale_color_manual(values = c("Ambient" = b.color, "Enriched" = n.color), 
                      name = "") +
-  ylab(expression(paste("Abundance/1000", cm^3))) +
+  ylab("*G. monodonta* density<br>(no. individuals/1000 cm<sup>3</sup>)") +
   xlab ("Crab treatment") +
-  theme(legend.position = "top",
-        panel.border = element_rect(color="black", size=2.3)) +
+  theme(legend.position = "top") +
   xlab("") -> plt.gmono
 ```
 
@@ -416,45 +438,13 @@ emm.gmono %>%
 # Plot together
 
 ```{r}
-pdf(here("figures", "parasite_mutualist_predictions.pdf"), height = 5.5, width = 10.5)
+cairo_pdf(here("figures", "Figure 3.pdf"), height = 3, width = 4.75)
 
-plt.gmono + plt.dflav + plot_annotation(tag_levels = c('a'), tag_prefix = '(',
-                            tag_suffix = ')')
-
-dev.off()
-```
-
-
-# G. mono - Trapezia plot 
-
-From Craig's comment:
-
-```{r}
-pdf(here("figures", "mean_trap_vs_Gmono.pdf"), height = 4, width = 7)
-metadata %>% 
-  ungroup() %>% 
-  rowwise() %>% 
-  mutate(average_crab = case_when(
-    # if there were 2 crabs to start with, add them here
-    crab == "Y" ~ mean(c(2, tbiden_1_month, tbiden_13_month)),
-    crab == "N" ~ mean(c(0, tbiden_1_month, tbiden_13_month))
-  )
-           ) %>% 
-  # what if we get rid of the outlier?
-  #filter(coral_id != 24) %>% 
-  ggplot(aes(x = average_crab, y = gmono_density_per_1000cm3)) +
-  geom_point(aes(color = treatment),
-             size = 2.5,
-             alpha = 0.65) +
-  #geom_smooth(method = "lm") +
-  scale_color_manual(name = "Treatment",
-                     values = c("Both" = b.color, "Nutrient" = n.color,
-                                "Crab" = crab.color, "Control" = control.color)) +
-  theme(text = element_text(size=20),
-        panel.border = element_rect(color="black", size = 2.3),
-        legend.position = "right") +
-  xlab((expression(paste("Mean ", italic("Trapezia"), " abundance")))) +
-  ylab(expression(paste(italic("G. monodonta"), "/1000", cm^3)))
+plt.gmono + plt.dflav + plot_annotation(title = "Figure 3",
+  theme = theme(plot.title = element_text(size = 10)),
+  tag_levels = c('a'), 
+  tag_prefix = '(',
+  tag_suffix = ')')
 
 dev.off()
 ```
