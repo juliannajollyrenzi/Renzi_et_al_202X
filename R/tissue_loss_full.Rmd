@@ -208,7 +208,7 @@ cairo_pdf(here("figures", "Figure 5.pdf"), height = 2.5, width = 5.5)
 
 
 panelA + panelB + 
-   plot_annotation(title = "Figure 2",
+   plot_annotation(title = "Figure 5",
                   theme = theme(plot.title = element_text(size = 10)),
                   tag_levels = c('a'), tag_prefix = '(',
                             tag_suffix = ')')

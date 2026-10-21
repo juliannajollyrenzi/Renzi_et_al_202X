@@ -152,19 +152,19 @@ water_nutrients %>%
 Variances are very unequal, so will use a Welch's t test
 
 ```{r Welchs t-test - 4 days}
-var.test(log(nitrite_nitrate_umol) ~ nutrients, data = four_days)
+var.test(log(nitrite_nitrate_uM) ~ nutrients, data = four_days)
 
 # test normality: nutrients
-qqnorm(log(four_days$nitrite_nitrate_umol[four_days$nutrients == "Y"]), pch = 1, frame = FALSE)
-qqline(log(four_days$nitrite_nitrate_umol[four_days$nutrients == "Y"]), col = "steelblue", lwd = 2)
+qqnorm(log(four_days$nitrite_nitrate_uM[four_days$nutrients == "Y"]), pch = 1, frame = FALSE)
+qqline(log(four_days$nitrite_nitrate_uM[four_days$nutrients == "Y"]), col = "steelblue", lwd = 2)
 
 # test normality: ambient
-qqnorm(log(four_days$nitrite_nitrate_umol[four_days$nutrients == "N"]), pch = 1, frame = FALSE)
-qqline(log(four_days$nitrite_nitrate_umol[four_days$nutrients == "N"]), col = "steelblue", lwd = 2)
+qqnorm(log(four_days$nitrite_nitrate_uM[four_days$nutrients == "N"]), pch = 1, frame = FALSE)
+qqline(log(four_days$nitrite_nitrate_uM[four_days$nutrients == "N"]), col = "steelblue", lwd = 2)
 
 
 # run test on trasnformed data
-t.test(log(nitrite_nitrate_umol) ~ nutrients, 
+t.test(log(nitrite_nitrate_uM) ~ nutrients, 
        var.equal = FALSE, 
        data = four_days)
 ```
@@ -172,19 +172,19 @@ t.test(log(nitrite_nitrate_umol) ~ nutrients,
 Same for one month
 
 ```{r Welchs t-test - 1 month}
-var.test(nitrite_nitrate_umol ~ nutrients, data = one_month)
+var.test(nitrite_nitrate_uM ~ nutrients, data = one_month)
 
 # test normality: nutrients
-qqnorm(one_month$nitrite_nitrate_umol[one_month$nutrients == "Y"], pch = 1, frame = FALSE)
-qqline(one_month$nitrite_nitrate_umol[one_month$nutrients == "Y"], col = "steelblue", lwd = 2)
+qqnorm(one_month$nitrite_nitrate_uM[one_month$nutrients == "Y"], pch = 1, frame = FALSE)
+qqline(one_month$nitrite_nitrate_uM[one_month$nutrients == "Y"], col = "steelblue", lwd = 2)
 
 # test normality: ambient
-qqnorm(one_month$nitrite_nitrate_umol[one_month$nutrients == "N"], pch = 1, frame = FALSE)
-qqline(one_month$nitrite_nitrate_umol[one_month$nutrients == "N"], col = "steelblue", lwd = 2)
+qqnorm(one_month$nitrite_nitrate_uM[one_month$nutrients == "N"], pch = 1, frame = FALSE)
+qqline(one_month$nitrite_nitrate_uM[one_month$nutrients == "N"], col = "steelblue", lwd = 2)
 
 
 # run test on one month data
-t.test(nitrite_nitrate_umol ~ nutrients, 
+t.test(nitrite_nitrate_uM ~ nutrients, 
        var.equal = FALSE, 
        data = one_month)
 ```

@@ -438,7 +438,7 @@ emm.gmono %>%
 # Plot together
 
 ```{r}
-cairo_pdf(here("figures", "Figure 3.pdf"), height = 3, width = 4.75)
+cairo_pdf(here("figures", "Figure 3.pdf"), height = 3, width = 5.5)
 
 plt.gmono + plt.dflav + plot_annotation(title = "Figure 3",
   theme = theme(plot.title = element_text(size = 10)),
