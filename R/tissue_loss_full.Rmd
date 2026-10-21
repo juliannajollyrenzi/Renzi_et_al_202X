@@ -104,6 +104,7 @@ Create Tweedie GLMM
 ```{r model}
 m.tl.full.1 <- glmmTMB(tissue_loss_5_percent ~ crab + nutrients + crab:nutrients + dflav_density_per_1000cm3 + gmono_density_per_1000cm3 + endosym_percent_change + (1|block), 
                   family = tweedie(link = "log"),
+                  contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = physiology_2)
 ```
 

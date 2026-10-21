@@ -144,6 +144,7 @@ physiology_2 %>%
 ```{r make model}
 m.prot.1 <- glmmTMB(protein_change ~ crab + nutrients + crab:nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
                   family = gaussian("identity"),
+                  contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = physiology_2)
 ```
 
@@ -159,7 +160,7 @@ check_model(m.prot.1)
 ```
 
 ```{r examine results}
-car::Anova(m.prot.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum)) 
+car::Anova(m.prot.1, type = 3) 
 ```
 
 Drop interaction
@@ -223,6 +224,7 @@ physiology_2 %>%
 ```{r make model}
 m.carb.1 <- glmmTMB(carb_change ~ crab + nutrients + crab:nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
                   family = gaussian(),
+                  contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = physiology_2)
 ```
 
@@ -238,7 +240,7 @@ check_model(m.carb.1)
 ```
 
 ```{r examine results}
-car::Anova(m.carb.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
+car::Anova(m.carb.1, type = 3)
 ```
 
 Drop interaction term
@@ -308,6 +310,7 @@ metadata %>%
 ```{r}
 m.tl.1 <- glmmTMB(tissue_loss_5_percent ~ crab + nutrients + crab:nutrients + (1|block), 
                   family = tweedie,
+                  contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = metadata)
 ```
 
@@ -323,7 +326,7 @@ check_model(m.tl.1)
 ```
 
 ```{r examine results}
-car::Anova(m.tl.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum)) 
+car::Anova(m.tl.1, type = 3) 
 ```
 
 Drop interaction
@@ -376,6 +379,7 @@ physiology_2 %>%
 ```{r make model}
 m.endo.1 <- glmmTMB(endosym_percent_change ~ crab + nutrients + crab:nutrients + (1|block), 
                   family = gaussian(link = "identity"),
+                  contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = physiology_2)
 ```
 

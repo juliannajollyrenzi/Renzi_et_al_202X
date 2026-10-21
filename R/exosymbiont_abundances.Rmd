@@ -209,6 +209,7 @@ dev.off()
 ```{r tweedie}
 m.abund.1 <- glmmTMB(density_1000cm3 ~ crab + nutrients + crab:nutrients + (1|block), 
                            family = tweedie(link = "log"),
+                     contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                            data = total_abund)
 ```
 
@@ -224,7 +225,7 @@ check_model(m.abund.1)
 ```
 
 ```{r examine results}
-car::Anova(m.abund.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
+car::Anova(m.abund.1, type = 3)
 ```
 
 Drop interaction
@@ -258,6 +259,7 @@ car::Anova(m.abund.2, type = 2) # also no effect if Trapezids are filtered out (
 ```{r D. flav ~ treatments}
 m.dflav.1 <- glmmTMB(dflav_density_per_1000cm3 ~ crab + nutrients + crab:nutrients + (1|block), 
                      family =  tweedie(link = "log"),
+                     contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                      data = metadata)
 ```
 
@@ -273,7 +275,7 @@ check_model(m.dflav.1)
 ```
 
 ```{r examine results}
-car::Anova(m.dflav.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
+car::Anova(m.dflav.1, type = 3)
 ```
 
 Drop the interaction
@@ -348,6 +350,7 @@ The Tweedie model has convergence problems, which is why we are using a Gamma fa
 ```{r}
 m.gmono.1 <- glmmTMB(gmono_density_per_1000cm3 ~ crab + nutrients + crab:nutrients + (1|block), 
                      family = Gamma(link = "log"), 
+                     contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                      data = metadata) 
 ```
 
@@ -365,7 +368,7 @@ check_model(m.gmono.1)
 Looks all right. Check results
 
 ```{r examine results}
-car::Anova(m.gmono.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum))
+car::Anova(m.gmono.1, type = 3)
 ```
 
 Drop interaction

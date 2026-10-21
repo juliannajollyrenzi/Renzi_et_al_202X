@@ -165,6 +165,7 @@ taxa_diversity_2 %>%
 ```{r model}
 m.rich.1 <- glmmTMB(richness ~ crab + nutrients + crab:nutrients + (1|block),
                     family = poisson(link = "log"),
+                    contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                     data = taxa_diversity_2)
 ```
 
@@ -181,7 +182,7 @@ check_model(m.rich.1)
 Examine results
 
 ```{r examine results}
-car::Anova(m.rich.1, type = 3, contrasts = list(nutrients = contr.sum, crab = contr.sum)) 
+car::Anova(m.rich.1, type = 3) 
 ```
 
 Drop interaction
@@ -232,6 +233,7 @@ taxa_diversity_2 %>%
 ```{r first model}
 m.even.1 <- glmmTMB((evenness) ~ crab + nutrients + crab:nutrients  + (1|block),
                   family = Gamma(link = "log"),
+                  contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = taxa_diversity_2)
 ```
 
