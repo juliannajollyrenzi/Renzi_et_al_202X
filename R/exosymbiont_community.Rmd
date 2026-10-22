@@ -334,6 +334,7 @@ metadata %>%
 adonis2(taxa_mat_1[,-1] ~ crab + nutrients + crab:nutrients, 
         strata = metadata$block, 
         data = metadata, 
+        by = "terms",
         method = "bray",
         perm = 10000)
 ```
