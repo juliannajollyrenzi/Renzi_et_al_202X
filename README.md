@@ -49,7 +49,7 @@ All research was based out of the University of California Gump Research Station
 
 Official citation forthcoming
 
-Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W. Osenberg, and Deron E. Burkepile (202X). Nitrogen addition strengthens coral mutualisms, mitigating the negative effects of enrichment on coral health. *In prep*.
+Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W. Osenberg, and Deron E. Burkepile (202X). Fish and crab mutualists mitigate the adverse effects of nutrient enrichment on corals. *In prep*.
 
 ### Acknowledgements
 
@@ -107,8 +107,6 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 *Change in proteins, carbohydrates, and endosymbiont densities for experimental corals after 13 months*
 
 **Description:** Change in protein content, change in carbohydrate content, and percent change in endosymbiont densities for experimental coral colonies, quantified from airbrushed coral tissue. Protein and carbohydrate content are calculated as a percentage of ash free dry weight. Change in protein/carbohydrate content is the protein/carbohydrate content for a coral at the end of the experiment minus the protein/carbohydrate content for that same coral at the start of the experiment. We quantified protein content using a Pierce BCA Protein Assay Kit with bovine serum albumin standard with 3 technical replicates for each sample and standard. We quantified carbohydrate content using a sulfuric acid incubation and glucose standards (Masuko et al. 2005, Baumann et al. 2021) with 3 technical replicates. We quantified endosymbiont densities using a Marienfled 0.100 mm hemocytometer using established methods (Becker et al. 2021), which we normalized to coral surface area to get the number of endosymbiont cells per square centimeter of tissue. Coral surface area was calculated using standard wax dipping techniques. Percent change of endosymbiont densities was calculated as the endosymbiont density at the end of the experiment minus the density at the start of the experiment divided by the density at the start of the experiment.
-
-Note: During data exploration we found that carbohydrate and protein content were linearly correlated with the surface area of the coral fragment. To deal with this correlation, we estimated the relationship between these metrics and fragment surface area in initial samples and subtracted the product of the slope of the line and fragment size from estimates to de-trend any effect of fragment size. The values in this file represent these adjusted values.
 
 #### Variables
 
