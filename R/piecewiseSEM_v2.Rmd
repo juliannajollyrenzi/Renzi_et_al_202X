@@ -106,7 +106,7 @@ m.dflav <- lmer(dflav_density_scale ~ nutrients + (1|block),
 
 Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
 
-```{r check model}
+```{r check dflav model}
 check_model(m.dflav)
 ```
 
@@ -120,7 +120,7 @@ m.gmono <- lmer(gmono_density_scale ~ crab + (1|block),
 
 Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
 
-```{r check model}
+```{r check gmono model}
 check_model(m.gmono)
   check_normality(simulate_residuals(m.gmono))
 ```
@@ -135,7 +135,7 @@ m.endo <- lmer(endosym_change_scale ~ nutrients + (1|block),
 
 Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
 
-```{r check model}
+```{r check endosymbiont model}
 check_model(m.endo)
 ```
 
@@ -149,13 +149,13 @@ m.prot.health <- lmer(protein_change_scale ~ nutrients + crab + interaction +
                       data = scaled_data)
 ```
 
-```{r check model}
+```{r check protein model}
 check_model(m.prot.health)
 ```
 
 Create pSEM
 
-```{r pSEM}
+```{r protein pSEM}
 sem.prot <- psem(
   m.dflav, 
   m.gmono, 
@@ -166,7 +166,7 @@ sem.prot <- psem(
 )
 ```
 
-```{r summary}
+```{r protein summary}
 summary(sem.prot, conserve = TRUE)
 
 # for chi-squared (run on non-REML model):
@@ -194,16 +194,16 @@ boot.prot <- bootMer(m.prot.health, FUN = fixef, nsim = 20000, type = "parametri
 Optional: save (or load)
 
 ```{r}
-# saveRDS(boot.dflav, file = "boot_dflav.rds")
-# saveRDS(boot.gmono, file = "boot_gmono.rds")
-# saveRDS(boot.endo, file = "boot_endo.rds")
-# saveRDS(boot.prot, file = "boot_protein.rds")
+# saveRDS(boot.dflav, file = here("boot_dflav.rds"))
+# saveRDS(boot.gmono, file = here("boot_gmono.rds"))
+# saveRDS(boot.endo, file = here("boot_endo.rds"))
+# saveRDS(boot.prot, file = here("boot_protein.rds"))
 
 # if you've already saved and want to load:
 # boot.dflav <- readRDS(here("boot_dflav.rds"))
 # boot.gmono <- readRDS(here("boot_gmono.rds"))
 # boot.endo <- readRDS(here("boot_endo.rds"))
-# boot.prot <- readRDS(here("boot_prot.rds"))
+# boot.prot <- readRDS(here("boot_protein.rds"))
 ```
 
 Now stack the original coefficients (first row) on top of the bootstrapped ones (all other rows below the first)
@@ -280,7 +280,7 @@ prot_effects %>%
 
 # Carbohydrate model
 
-```{r protein model}
+```{r carbohydrate model}
 m.carb.health <- lmer(carb_change_scale ~ nutrients + crab + interaction + 
                         endosym_change_scale + dflav_density_scale + gmono_density_scale + 
                         sa_T1_scale + sa_T3_scale + (1|block),
@@ -288,13 +288,13 @@ m.carb.health <- lmer(carb_change_scale ~ nutrients + crab + interaction +
                       data = scaled_data)
 ```
 
-```{r check model}
+```{r check carb model}
 check_model(m.carb.health)
 ```
 
 Create pSEM
 
-```{r pSEM}
+```{r carb pSEM}
 sem.carb <- psem(
   m.dflav, 
   m.gmono, 
@@ -305,7 +305,7 @@ sem.carb <- psem(
 )
 ```
 
-```{r summary}
+```{r carb summary}
 summary(sem.carb, conserve = TRUE)
 
 # for chi-squared (run on non-REML model):
@@ -315,14 +315,14 @@ summary(sem.carb, conserve = TRUE)
 **Notes on the summary output:**
 - For tests of directed separation, p-values > 0.05 means those paths are justified to exclude
 - Fischer's C statistic > 0.05 provides support for the hypothesized model structure
-- Do NOT report Chi-squared values for models fit with REML--if you want the chi-squared values (13.132 on 14 df with p = 0.516) re-run models with REML = FALSE and use `LLchisq(sem.prot)`
+- Do NOT report Chi-squared values for models fit with REML--if you want the chi-squared values (13.132 on 14 df with p = 0.516) re-run models with REML = FALSE and use `LLchisq(sem.carb)`
 
 ## Bootstrap direct and indirect effects 
 
 To estimate effects, we'll simulate new data from the fitted model, but shuffle random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
 
 ```{r}
-set.seed(0429)
+set.seed(4290)
 
 boot.carb <- bootMer(m.carb.health, FUN = fixef, nsim = 20000, type = "parametric")
 ```
@@ -330,7 +330,7 @@ boot.carb <- bootMer(m.carb.health, FUN = fixef, nsim = 20000, type = "parametri
 Optional: save (or load)
 
 ```{r}
-# saveRDS(boot.carb, file = "boot_carb.rds")
+# saveRDS(boot.carb, file = here("boot_carb.rds"))
 
 # if you've already saved and want to load:
 # boot.carb <- readRDS(here("boot_carb.rds"))
