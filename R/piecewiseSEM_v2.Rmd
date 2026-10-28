@@ -201,9 +201,9 @@ Optional: save (or load)
 
 # if you've already saved and want to load:
 # boot.dflav <- readRDS(here("boot_dflav.rds"))
-# boot.gmono <- readRDS(here("boot.gmono.rds"))
-# boot.endo <- readRDS(here("boot.endo.rds"))
-# boot.prot <- readRDS(here("boot.prot.rds"))
+# boot.gmono <- readRDS(here("boot_gmono.rds"))
+# boot.endo <- readRDS(here("boot_endo.rds"))
+# boot.prot <- readRDS(here("boot_prot.rds"))
 ```
 
 Now stack the original coefficients (first row) on top of the bootstrapped ones (all other rows below the first)
@@ -278,4 +278,124 @@ prot_effects %>%
   mutate(percent_of_initial = estimate_pp/init_prot*100)
 ```
 
+# Carbohydrate model
 
+```{r protein model}
+m.carb.health <- lmer(carb_change_scale ~ nutrients + crab + interaction + 
+                        endosym_change_scale + dflav_density_scale + gmono_density_scale + 
+                        sa_T1_scale + sa_T3_scale + (1|block),
+                      # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+                      data = scaled_data)
+```
+
+```{r check model}
+check_model(m.carb.health)
+```
+
+Create pSEM
+
+```{r pSEM}
+sem.carb <- psem(
+  m.dflav, 
+  m.gmono, 
+  m.endo, 
+  m.carb.health,
+  gmono_density_scale %~~% sa_T3_scale, # correlated error
+  data = as.data.frame(scaled_data)
+)
+```
+
+```{r summary}
+summary(sem.carb, conserve = TRUE)
+
+# for chi-squared (run on non-REML model):
+# LLchisq(sem.carb) # same as without random effect
+```
+
+**Notes on the summary output:**
+- For tests of directed separation, p-values > 0.05 means those paths are justified to exclude
+- Fischer's C statistic > 0.05 provides support for the hypothesized model structure
+- Do NOT report Chi-squared values for models fit with REML--if you want the chi-squared values (13.132 on 14 df with p = 0.516) re-run models with REML = FALSE and use `LLchisq(sem.prot)`
+
+## Bootstrap direct and indirect effects 
+
+To estimate effects, we'll simulate new data from the fitted model, but shuffle random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
+
+```{r}
+set.seed(0429)
+
+boot.carb <- bootMer(m.carb.health, FUN = fixef, nsim = 20000, type = "parametric")
+```
+
+Optional: save (or load)
+
+```{r}
+# saveRDS(boot.carb, file = "boot_carb.rds")
+
+# if you've already saved and want to load:
+# boot.carb <- readRDS(here("boot_carb.rds"))
+```
+
+Now stack the original coefficients (first row) on top of the bootstrapped ones (all other rows below the first)
+
+```{r}
+carb_coefs <- rbind(boot.carb$t0, boot.carb$t)
+```
+
+Now get these into a tibble with well labeled columns. Important notes:
+1. Because of the standardization **all effects are in standard deviations of carbohydrate change per treatment**
+2. Because interaction is its own 0/1 column the "nutrients" coefficient is the nutrient effect without crabs (when interaction = 0) and nutrients + interaction is the nutrient effect with crabs (and vice versa)
+3. Indirect paths are the product of direct paths (e.g., `nutr_indirect_dflav`)
+
+```{r}
+tibble(
+  # make a column that labels the first row as "estimate" (the original coefficients, which we made to be the first item using rbind() above), then the rest as "boostrap"
+  type = c("estimate", rep("bootstrap", 20000)),
+  # copy the direct effects of nutrients without crab from the protein model (first row is the estimate)
+  nutr_direct_nocrab = carb_coefs[, "nutrients"],
+  # copy the direct effects of nutrients with crab from the protein model
+  nutr_direct_crab = carb_coefs[, "nutrients"] + carb_coefs[, "interaction"],
+  # get the average effect of nutrients by multiplying interaction coefficient by 1/2
+  nutr_direct_avg = carb_coefs[, "nutrients"] + 0.5*carb_coefs[, "interaction"], # averaged over crab treatments
+  # indirect effects of nutrients via fish and endosymbionts; these don't depend on crabs
+  nutr_indirect_dflav = dflav_coefs[, "nutrients"] * carb_coefs[, "dflav_density_scale"],
+  nutr_indirect_endo = endo_coefs[, "nutrients"] * carb_coefs[, "endosym_change_scale"],
+  # copy the direct effects of crab in ambient treatments from the protein model
+  crab_direct_nonutr = carb_coefs[, "crab"],
+  # get the direct effect of crab in enriched treatments
+  crab_direct_nutr = carb_coefs[, "crab"] + carb_coefs[, "interaction"],
+  # averaged over nutrient treatments
+  crab_direct_avg = carb_coefs[, "crab"] + 0.5*carb_coefs[, "interaction"],
+  # indirect effect of crab
+  crab_indirect_gmono = gmono_coefs[, "crab"] * carb_coefs[, "gmono_density_scale"],
+  # the interaction itself (difference in the nutrient effect with vs. without crabs)
+  interaction = carb_coefs[, "interaction"]
+  ) %>% 
+  # now add the total effects of nutrients (direct + both indirect paths)
+  mutate(nutr_total_nocrab = nutr_direct_nocrab + nutr_indirect_dflav + nutr_indirect_endo,
+         nutr_total_crab = nutr_direct_crab + nutr_indirect_dflav + nutr_indirect_endo,
+         nutr_total_avg = nutr_direct_avg + nutr_indirect_dflav + nutr_indirect_endo) %>% 
+  # total effects of crab (direct + indirect path through G. monodonta)
+  mutate(crab_total_nonutr = crab_direct_nonutr + crab_indirect_gmono,
+         crab_total_nutr = crab_direct_nutr + crab_indirect_gmono,
+         crab_total_avg = crab_direct_avg + crab_indirect_gmono) -> carb_effects
+```
+
+Now get: 
+1. 95% confidence intervals for effects
+2. Percentage point changes (by multiplying by one standard deviation to undo the standardization)
+
+```{r}
+# calculate values
+carb_effects %>% 
+  # pivot and note that these units are in terms of 1 standard deviation
+  pivot_longer(-type, names_to = "effect", values_to = "sd_units") %>% 
+  # convert to percentage points (multiply by the SD used to scale protein_change)
+  mutate(pp = sd_units * sd(scaled_data$carb_change)) %>% 
+  mutate(effect = fct_inorder(effect)) %>% # keep effects in the order above
+  group_by(effect) %>% 
+  summarize(estimate_pp = pp[type == "estimate"], # get value for original estimate
+            lower_CI = quantile(pp[type == "bootstrap"], 0.025), # get lower CI of bootstrap values
+            upper_CI = quantile(pp[type == "bootstrap"], 0.975) # get upper CI of bootstrap values
+            ) 
+```
