@@ -180,7 +180,7 @@ summary(sem.prot, conserve = TRUE)
 
 ## Bootstrap direct and indirect effects 
 
-To estimate effects, we'll simulate new data from the fitted model, but shuffle random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
+To estimate effects, we'll simulate new data from the fitted model, but draw new random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
 
 ```{r}
 set.seed(0429)
@@ -319,7 +319,7 @@ summary(sem.carb, conserve = TRUE)
 
 ## Bootstrap direct and indirect effects 
 
-To estimate effects, we'll simulate new data from the fitted model, but shuffle random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
+To estimate effects, we'll simulate new data from the fitted model, but draw new random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
 
 ```{r}
 set.seed(4290)
