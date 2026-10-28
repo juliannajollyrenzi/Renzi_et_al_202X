@@ -25,7 +25,6 @@ librarian::shelf(here, # relative file paths
                  BlakeRMills/MoMAColors, # color palette
                  piecewiseSEM, # structural equation modeling
                  semEff, # indirect effect p-values
-                 glmmTMB,
                  performance # check models
                  )
 ```
