@@ -350,6 +350,10 @@ sem.prot.raw <- psem(m.dflav,
 ```
 
 ```{r}
+summary(sem.prot.raw, conserve = TRUE)
+```
+
+```{r}
 protein.raw.boot <- bootEff(sem.prot.raw, R = 20000, seed = 0429, parallel = "multicore", 
                             incl.raw = TRUE) # this gets the raw values, rather than in SD's (standardized)
 ```
@@ -402,4 +406,6 @@ init_prot <- 5.59
 # for D. flavicaudus indirect effect
 0.688/init_prot # ~12%
 ```
+
+
 

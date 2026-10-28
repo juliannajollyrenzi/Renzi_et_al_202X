@@ -1,0 +1,181 @@
+---
+title: "Piecewise SEM protein and carb models"
+author: "Julianna Renzi"
+date: "2026-10-28"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r clear environment}
+# clear environment for maximum reproducibility
+rm(list=ls())
+```
+
+```{r load packages}
+# load librarian (package for installing/loading packages)
+if (!require("librarian")) install.packages("librarian")
+
+# load requried packages
+librarian::shelf(here, # relative file paths 
+                 tidyverse, # data wrangling
+                 BlakeRMills/MoMAColors, # color palette
+                 piecewiseSEM, # structural equation modeling
+                 lme4,
+                 performance # check models
+                 )
+```
+
+```{r explicitly assign functions if needed}
+# make sure correct functions attached to the correct packages
+summarize <- dplyr::summarize
+group_by <- dplyr::group_by
+select <- dplyr::select
+```
+
+```{r set seed}
+set.seed(0429)
+```
+
+# Set the color palette and graphics
+
+```{r consistent color palette by treatment}
+colorz <- moma.colors("Warhol", n=15, type="discrete")
+
+b.color <- colorz[3]
+control.color <- colorz[9]
+crab.color <- colorz[1]
+n.color <- colorz[6]
+```
+
+# Read in data
+
+```{r}
+physiology_1 <- read_csv(here("data", "physiology.csv"))
+metadata <- read_csv(here("data", "metadata.csv"))
+```
+
+# Prepare data
+
+Clean, join, and scale data
+
+```{r}
+metadata %>% 
+  # join metadata and physiology data
+  inner_join(physiology_1) %>% 
+  # turn categories into indicators
+  mutate(crab = case_when(
+    crab == "Y" ~ 1,
+    crab == "N" ~ 0,
+    TRUE ~ -9999
+    )) %>% 
+  mutate(nutrients = case_when( 
+    nutrients == "Y" ~ 1,
+    nutrients == "N" ~ 0,
+    TRUE ~ -9999
+    )) %>% 
+  mutate(interaction = nutrients*crab) %>% 
+  # scale variables
+  mutate(protein_change_scale = scale(protein_change)[,1],
+         carb_change_scale = scale(carb_change)[,1],
+         endosym_change_scale = scale(endosym_percent_change)[,1],
+         dflav_density_scale = scale(dflav_density_per_1000cm3)[,1],
+         gmono_density_scale = scale(gmono_density_per_1000cm3)[,1],
+         sa_T1_scale = scale(sa_cm2_T1)[,1],
+         sa_T3_scale = scale(sa_cm2_T3)[,1]
+         ) -> scaled_data
+```
+
+# Make individual models
+
+First we'll fit individual models. Most will be shared between protein and carb models
+
+# Overall models
+
+D. flavicaudus model
+
+```{r D. flavicaudus model}
+m.dflav <- lmer(dflav_density_scale ~ nutrients + (1|block),
+                # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+                data = scaled_data) 
+```
+
+Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
+
+```{r check model}
+check_model(m.dflav)
+```
+
+G. monodonta model
+
+```{r G. monodonta model}
+m.gmono <- lmer(gmono_density_scale ~ crab + (1|block),
+                # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+                data = scaled_data)
+```
+
+Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
+
+```{r check model}
+check_model(m.gmono)
+  check_normality(simulate_residuals(m.gmono))
+```
+
+Endosymbiont density model
+
+```{r endosymbiont model}
+m.endo <- lmer(endosym_change_scale ~ nutrients + (1|block),
+               # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+               data = scaled_data)
+```
+
+Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
+
+```{r check model}
+check_model(m.endo)
+```
+
+# Protein model
+
+```{r protein model}
+m.prot.health <- lmer(protein_change_scale ~ nutrients + crab + interaction + 
+                        endosym_change_scale + dflav_density_scale + gmono_density_scale + 
+                        sa_T1_scale + sa_T3_scale + (1|block),
+                      # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+                      data = scaled_data)
+```
+
+```{r check model}
+check_model(m.prot.health)
+```
+
+Create pSEM
+
+```{r pSEM}
+sem.prot <- psem(
+  m.dflav, 
+  m.gmono, 
+  m.endo, 
+  m.prot.health,
+  gmono_density_scale %~~% sa_T3_scale, # correlated error
+  data = as.data.frame(scaled_data)
+)
+```
+
+```{r summary}
+summary(sem.prot, conserve = TRUE)
+
+# for chi-squared (run on non-REML model):
+# LLchisq(sem.prot) # same as without random effect
+```
+
+**Notes on the summary output:**
+- For tests of directed separation, p-values > 0.05 means those paths are justified to exclude
+- Fischer's C statistic > 0.05 provides support for the hypothesized model structure
+- Do NOT report Chi-squared values for models fit with REML--if you want the chi-squared values (13.132 on 14 df with p = 0.516) re-run models with REML = FALSE and use `LLchisq(sem.prot)`
+
+## Estimate direct and indirect effects
