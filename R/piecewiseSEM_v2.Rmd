@@ -254,6 +254,37 @@ tibble(
          crab_total_avg = crab_direct_avg + crab_indirect_gmono) -> prot_effects
 ```
 
+## Get confidence intervals for each path
+
+Get each arrow for the SEM diagram (Fig. 4) and Table S5. Recall these are in units of standard deviations
+
+```{r}
+# one column per arrow in the SEM diagram (model estimate in first row, bootstrap replicates below)
+tibble(
+  type = c("estimate", rep("bootstrap", 20000)),
+  nutrients_to_dflav = dflav_coefs[, "nutrients"],
+  crab_to_gmono = gmono_coefs[, "crab"],
+  nutrients_to_endo = endo_coefs[, "nutrients"],
+  nutrients_to_prot = prot_coefs[, "nutrients"], # effect without crabs
+  crab_to_prot = prot_coefs[, "crab"], # effect without nutrients
+  interaction_to_prot = prot_coefs[, "interaction"],
+  dflav_to_prot = prot_coefs[, "dflav_density_scale"],
+  gmono_to_prot = prot_coefs[, "gmono_density_scale"],
+  endo_to_prot = prot_coefs[, "endosym_change_scale"],
+  saT1_to_prot = prot_coefs[, "sa_T1_scale"],
+  saT3_to_prot = prot_coefs[, "sa_T3_scale"]
+  ) %>% 
+  pivot_longer(-type, names_to = "path", values_to = "coef") %>% 
+  mutate(path = fct_inorder(path)) %>% 
+  group_by(path) %>% 
+  summarize(estimate = coef[type == "estimate"],
+            lower_CI = quantile(coef[type == "bootstrap"], 0.025),
+            upper_CI = quantile(coef[type == "bootstrap"], 0.975)) %>% 
+  mutate(CI_excludes_zero = sign(lower_CI) == sign(upper_CI)) # %>% view()
+```
+
+## Summarize effects on protein
+
 Now get: 
 1. 95% confidence intervals for effects
 2. Percentage point changes (by multiplying by one standard deviation to undo the standardization)
@@ -380,6 +411,37 @@ tibble(
          crab_total_nutr = crab_direct_nutr + crab_indirect_gmono,
          crab_total_avg = crab_direct_avg + crab_indirect_gmono) -> carb_effects
 ```
+
+## Get confidence intervals for each path
+
+Get each arrow for the SEM diagram (Fig. 4) and Table S5. Recall these are in units of standard deviations
+
+```{r}
+# one column per arrow in the SEM diagram (model estimate in first row, bootstrap replicates below)
+tibble(
+  type = c("estimate", rep("bootstrap", 20000)),
+  nutrients_to_dflav = dflav_coefs[, "nutrients"],
+  crab_to_gmono = gmono_coefs[, "crab"],
+  nutrients_to_endo = endo_coefs[, "nutrients"],
+  nutrients_to_carb = carb_coefs[, "nutrients"], # effect without crabs
+  crab_to_carb = carb_coefs[, "crab"], # effect without nutrients
+  interaction_to_carb = carb_coefs[, "interaction"],
+  dflav_to_carb = carb_coefs[, "dflav_density_scale"],
+  gmono_to_carb = carb_coefs[, "gmono_density_scale"],
+  endo_to_carb = carb_coefs[, "endosym_change_scale"],
+  saT1_to_prot = carb_coefs[, "sa_T1_scale"],
+  saT3_to_prot = carb_coefs[, "sa_T3_scale"]
+  ) %>% 
+  pivot_longer(-type, names_to = "path", values_to = "coef") %>% 
+  mutate(path = fct_inorder(path)) %>% 
+  group_by(path) %>% 
+  summarize(estimate = coef[type == "estimate"],
+            lower_CI = quantile(coef[type == "bootstrap"], 0.025),
+            upper_CI = quantile(coef[type == "bootstrap"], 0.975)) %>% 
+  mutate(CI_excludes_zero = sign(lower_CI) == sign(upper_CI)) # %>% view()
+```
+
+## Summarize effects on carb
 
 Now get: 
 1. 95% confidence intervals for effects
