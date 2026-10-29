@@ -1,7 +1,8 @@
 ---
 title: "Piecewise SEM protein and carb models"
+author: "Julianna Renzi"
+date: "2026-10-28"
 output: html_document
-date: "2025-05-26"
 editor_options: 
   chunk_output_type: console
 ---
@@ -24,7 +25,7 @@ librarian::shelf(here, # relative file paths
                  tidyverse, # data wrangling
                  BlakeRMills/MoMAColors, # color palette
                  piecewiseSEM, # structural equation modeling
-                 semEff, # indirect effect p-values
+                 lme4,
                  performance # check models
                  )
 ```
@@ -98,68 +99,63 @@ First we'll fit individual models. Most will be shared between protein and carb 
 D. flavicaudus model
 
 ```{r D. flavicaudus model}
-m.dflav <- glm(dflav_density_scale ~ nutrients,
-               family = gaussian(link = "identity"),
-               data = scaled_data)
+m.dflav <- lmer(dflav_density_scale ~ nutrients + (1|block),
+                # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+                data = scaled_data) 
 ```
 
-```{r check model}
+Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
+
+```{r check dflav model}
 check_model(m.dflav)
-  # check normality of residuals manually:
-  qqnorm(m.dflav$residuals)
-  qqline(m.dflav$residuals)
-  check_normality(simulate_residuals(m.dflav))
 ```
 
 G. monodonta model
 
 ```{r G. monodonta model}
-m.gmono <- glm(gmono_density_scale ~ crab,
-               family = gaussian(link = "identity"),
-               data = scaled_data)
+m.gmono <- lmer(gmono_density_scale ~ crab + (1|block),
+                # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+                data = scaled_data)
 ```
 
-```{r check model}
+Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
+
+```{r check gmono model}
 check_model(m.gmono)
-  # check normality of residuals manually:
-  qqnorm(m.gmono$residuals)
-  qqline(m.gmono$residuals)
   check_normality(simulate_residuals(m.gmono))
 ```
 
 Endosymbiont density model
 
 ```{r endosymbiont model}
-m.endo <- glm(endosym_change_scale ~ nutrients,
-              family = gaussian(link = "identity"),
-              data = scaled_data)
+m.endo <- lmer(endosym_change_scale ~ nutrients + (1|block),
+               # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+               data = scaled_data)
 ```
 
-```{r check model}
+Note the `isSingular` message is because block is not improving the model/block effects are estimated near zero. We'll keep block anyway because of the design.
+
+```{r check endosymbiont model}
 check_model(m.endo)
-  # check normality of residuals manually:
-  qqnorm(m.endo$residuals)
-  qqline(m.endo$residuals)
-  check_normality(simulate_residuals(m.endo))
 ```
 
 # Protein model
 
 ```{r protein model}
-m.prot.health <- glm(protein_change_scale ~ nutrients + crab + interaction + endosym_change_scale + dflav_density_scale + gmono_density_scale + sa_T1_scale + sa_T3_scale,
-                     family = gaussian(link = "identity"),
-                     data = scaled_data)
+m.prot.health <- lmer(protein_change_scale ~ nutrients + crab + interaction + 
+                        endosym_change_scale + dflav_density_scale + gmono_density_scale + 
+                        sa_T1_scale + sa_T3_scale + (1|block),
+                      # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+                      data = scaled_data)
 ```
 
-```{r check model}
+```{r check protein model}
 check_model(m.prot.health)
-  qqnorm(m.prot.health$residuals)
-  qqline(m.prot.health$residuals)
 ```
 
 Create pSEM
 
-```{r pSEM}
+```{r protein pSEM}
 sem.prot <- psem(
   m.dflav, 
   m.gmono, 
@@ -170,96 +166,169 @@ sem.prot <- psem(
 )
 ```
 
-```{r summary}
+```{r protein summary}
 summary(sem.prot, conserve = TRUE)
+
+# for chi-squared (run on non-REML model):
+# LLchisq(sem.prot) # same as without random effect
 ```
 
 **Notes on the summary output:**
 - For tests of directed separation, p-values > 0.05 means those paths are justified to exclude
 - Fischer's C statistic > 0.05 provides support for the hypothesized model structure
+- Do NOT report Chi-squared values for models fit with REML--if you want the chi-squared values (13.132 on 14 df with p = 0.516) re-run models with REML = FALSE and use `LLchisq(sem.prot)`
 
-## Estimate direct and indirect effects
+## Bootstrap direct and indirect effects 
 
-Use the `semEff` package to calculate effects via bootstrapping
+To estimate effects, we'll simulate new data from the fitted model, but draw new random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
 
-```{r bootstrap effects}
-# bootstrap and save standardized effects
-protein.sem.boot <- bootEff(sem.prot, R = 20000, 
-                            seed = 0429,
-                            parallel = "multicore") # this is for calculating back to percentage points 
+```{r}
+set.seed(0429)
 
-# calculate direct, indirect, and total effects
-protein.sem.eff <- semEff(protein.sem.boot)
+boot.dflav <- bootMer(m.dflav, FUN = fixef, nsim = 20000, type = "parametric")
+boot.gmono <- bootMer(m.gmono, FUN = fixef, nsim = 20000, type = "parametric")
+boot.endo <- bootMer(m.endo, FUN = fixef, nsim = 20000, type = "parametric")
+boot.prot <- bootMer(m.prot.health, FUN = fixef, nsim = 20000, type = "parametric")
 ```
 
-```{r examine paths}
-summary(protein.sem.eff, 
-        ci.conf = 0.95) # defaults to 95% CI and standardized, but just being thorough 
+Optional: save (or load)
+
+```{r}
+# saveRDS(boot.dflav, file = here("boot_dflav.rds"))
+# saveRDS(boot.gmono, file = here("boot_gmono.rds"))
+# saveRDS(boot.endo, file = here("boot_endo.rds"))
+# saveRDS(boot.prot, file = here("boot_protein.rds"))
+
+# if you've already saved and want to load:
+# boot.dflav <- readRDS(here("boot_dflav.rds"))
+# boot.gmono <- readRDS(here("boot_gmono.rds"))
+# boot.endo <- readRDS(here("boot_endo.rds"))
+# boot.prot <- readRDS(here("boot_protein.rds"))
 ```
 
-**Results**
+Now stack the original coefficients (first row) on top of the bootstrapped ones (all other rows below the first)
 
-*Protein change*
+```{r}
+dflav_coefs <- rbind(boot.dflav$t0, boot.dflav$t)
+gmono_coefs <- rbind(boot.gmono$t0, boot.gmono$t)
+endo_coefs <- rbind(boot.endo$t0, boot.endo$t)
+prot_coefs <- rbind(boot.prot$t0, boot.prot$t)
+```
 
-                                   Effect     Bias   Std. Err.   Lower CI Upper CI    
-                                   ------   ------   ---------   -------- --------    
- DIRECT:    nutrients            | -0.316 |  0.022 |     0.081 |   -0.498   -0.180 | *
-            crab                 | -0.130 |  0.005 |     0.120 |   -0.364    0.110 |  
-            interaction          |  0.037 |  0.002 |     0.119 |   -0.187    0.281 |  
-            sa.T1.scale          | -0.619 |  0.063 |     0.113 |   -0.833   -0.451 | *
-            sa.T3.scale          |  0.237 | -0.017 |     0.091 |    0.070    0.422 | *
-            dflav.density.scale  |  0.423 | -0.032 |     0.094 |    0.284    0.669 | *
-            gmono.density.scale  | -0.244 |  0.033 |     0.114 |   -0.507   -0.056 | *
-            endosym.change.scale |  0.095 | -0.006 |     0.101 |   -0.095    0.302 |  
-                                 |        |        |           |                   |  
- INDIRECT:  nutrients            |  0.264 | -0.021 |     0.075 |    0.148    0.463 | *
-            crab                 |  0.082 | -0.008 |     0.047 |    0.010    0.211 | *
-                                 |        |        |           |                   |  
- TOTAL:     nutrients            | -0.052 |  0.001 |     0.091 |   -0.235    0.122 |  
-            crab                 | -0.047 | -0.003 |     0.125 |   -0.288    0.205 |  
-            interaction          |  0.037 |  0.002 |     0.119 |   -0.187    0.281 |  
-            sa.T1.scale          | -0.619 |  0.063 |     0.113 |   -0.833   -0.451 | *
-            sa.T3.scale          |  0.237 | -0.017 |     0.091 |    0.070    0.422 | *
-            dflav.density.scale  |  0.423 | -0.032 |     0.094 |    0.284    0.669 | *
-            gmono.density.scale  | -0.244 |  0.033 |     0.114 |   -0.507   -0.056 | *
-            endosym.change.scale |  0.095 | -0.006 |     0.101 |   -0.095    0.302 |  
-                                 |        |        |           |                   |  
- MEDIATORS: dflav.density.scale  |  0.232 | -0.019 |     0.063 |    0.139    0.410 | *
-            gmono.density.scale  |  0.082 | -0.008 |     0.047 |    0.010    0.211 | *
-            endosym.change.scale |  0.032 | -0.002 |     0.038 |   -0.023    0.139 | 
+Now get these into a tibble with well labeled columns. Important notes:
+1. Because of the standardization **all effects are in standard deviations of protein change per treatment**
+2. Because interaction is its own 0/1 column the "nutrients" coefficient is the nutrient effect without crabs (when interaction = 0) and nutrients + interaction is the nutrient effect with crabs (and vice versa)
+3. Indirect paths are the product of direct paths (e.g., `nutr_indirect_dflav`)
 
-*D. flavicaudus*
+```{r}
+tibble(
+  # make a column that labels the first row as "estimate" (the original coefficients, which we made to be the first item using rbind() above), then the rest as "boostrap"
+  type = c("estimate", rep("bootstrap", 20000)),
+  # copy the direct effects of nutrients without crab from the protein model (first row is the estimate)
+  nutr_direct_nocrab = prot_coefs[, "nutrients"],
+  # copy the direct effects of nutrients with crab from the protein model
+  nutr_direct_crab = prot_coefs[, "nutrients"] + prot_coefs[, "interaction"],
+  # get the average effect of nutrients by multiplying interaction coefficient by 1/2
+  nutr_direct_avg = prot_coefs[, "nutrients"] + 0.5*prot_coefs[, "interaction"], # averaged over crab treatments
+  # indirect effects of nutrients via fish and endosymbionts; these don't depend on crabs
+  nutr_indirect_dflav = dflav_coefs[, "nutrients"] * prot_coefs[, "dflav_density_scale"],
+  nutr_indirect_endo = endo_coefs[, "nutrients"] * prot_coefs[, "endosym_change_scale"],
+  # copy the direct effects of crab in ambient treatments from the protein model
+  crab_direct_nonutr = prot_coefs[, "crab"],
+  # get the direct effect of crab in enriched treatments
+  crab_direct_nutr = prot_coefs[, "crab"] + prot_coefs[, "interaction"],
+  # averaged over nutrient treatments
+  crab_direct_avg = prot_coefs[, "crab"] + 0.5*prot_coefs[, "interaction"],
+  # indirect effect of crab
+  crab_indirect_gmono = gmono_coefs[, "crab"] * prot_coefs[, "gmono_density_scale"],
+  # the interaction itself (difference in the nutrient effect with vs. without crabs)
+  interaction = prot_coefs[, "interaction"]
+  ) %>% 
+  # now add the total effects of nutrients (direct + both indirect paths)
+  mutate(nutr_total_nocrab = nutr_direct_nocrab + nutr_indirect_dflav + nutr_indirect_endo,
+         nutr_total_crab = nutr_direct_crab + nutr_indirect_dflav + nutr_indirect_endo,
+         nutr_total_avg = nutr_direct_avg + nutr_indirect_dflav + nutr_indirect_endo) %>% 
+  # total effects of crab (direct + indirect path through G. monodonta)
+  mutate(crab_total_nonutr = crab_direct_nonutr + crab_indirect_gmono,
+         crab_total_nutr = crab_direct_nutr + crab_indirect_gmono,
+         crab_total_avg = crab_direct_avg + crab_indirect_gmono) -> prot_effects
+```
 
-                        Effect     Bias   Std. Err.   Lower CI Upper CI    
-                        ------   ------   ---------   -------- --------    
- DIRECT:    nutrients |  0.548 | -0.002 |     0.106 |    0.284    0.715 | *
+## Get confidence intervals for each path
 
-*G. monodonta*
+Get each arrow for the SEM diagram (Fig. 4) and Table S5. Recall these are in units of standard deviations
 
-                   Effect     Bias   Std. Err.   Lower CI Upper CI    
-                   ------   ------   ---------   -------- --------    
- DIRECT:    crab | -0.337 | -0.004 |     0.115 |   -0.524   -0.048 | *
- 
-*Endosymbionts*
- 
-                        Effect     Bias   Std. Err.   Lower CI Upper CI    
-                        ------   ------   ---------   -------- --------    
- DIRECT:    nutrients |  0.336 | -0.001 |     0.139 |    0.008    0.566 | *
+```{r}
+# one column per arrow in the SEM diagram (model estimate in first row, bootstrap replicates below)
+tibble(
+  type = c("estimate", rep("bootstrap", 20000)),
+  nutrients_to_dflav = dflav_coefs[, "nutrients"],
+  crab_to_gmono = gmono_coefs[, "crab"],
+  nutrients_to_endo = endo_coefs[, "nutrients"],
+  nutrients_to_prot = prot_coefs[, "nutrients"], # effect without crabs
+  crab_to_prot = prot_coefs[, "crab"], # effect without nutrients
+  interaction_to_prot = prot_coefs[, "interaction"],
+  dflav_to_prot = prot_coefs[, "dflav_density_scale"],
+  gmono_to_prot = prot_coefs[, "gmono_density_scale"],
+  endo_to_prot = prot_coefs[, "endosym_change_scale"],
+  saT1_to_prot = prot_coefs[, "sa_T1_scale"],
+  saT3_to_prot = prot_coefs[, "sa_T3_scale"]
+  ) %>% 
+  pivot_longer(-type, names_to = "path", values_to = "coef") %>% 
+  mutate(path = fct_inorder(path)) %>% 
+  group_by(path) %>% 
+  summarize(estimate = coef[type == "estimate"],
+            lower_CI = quantile(coef[type == "bootstrap"], 0.025),
+            upper_CI = quantile(coef[type == "bootstrap"], 0.975)) %>% 
+  mutate(CI_excludes_zero = sign(lower_CI) == sign(upper_CI))  
+```
+
+## Summarize effects on protein
+
+Now get: 
+1. 95% confidence intervals for effects
+2. Percentage point changes (by multiplying by one standard deviation to undo the standardization)
+3. Relative magnitude of percentage point change relative to initial average protein (5.59% of holobiont AFDW)
+
+```{r}
+# initial protein content
+init_prot <- 5.59
+
+# calculate values
+prot_effects %>% 
+  # pivot and note that these units are in terms of 1 standard deviation
+  pivot_longer(-type, names_to = "effect", values_to = "sd_units") %>% 
+  # convert to percentage points (multiply by the SD used to scale protein_change)
+  mutate(pp = sd_units * sd(scaled_data$protein_change)) %>% 
+  mutate(effect = fct_inorder(effect)) %>% # keep effects in the order above
+  group_by(effect) %>% 
+  summarize(estimate_sd = sd_units[type == "estimate"], 
+            lower_CI_sd = quantile(sd_units[type == "bootstrap"], 0.025),
+            upper_CI_sd = quantile(sd_units[type == "bootstrap"], 0.975),
+            estimate_pp = pp[type == "estimate"], # get value for original estimate
+            lower_CI_pp = quantile(pp[type == "bootstrap"], 0.025), # get lower CI of bootstrap values
+            upper_CI_pp = quantile(pp[type == "bootstrap"], 0.975) # get upper CI of bootstrap values
+            ) %>% 
+  mutate(percent_of_initial = estimate_pp/init_prot*100)
+```
 
 # Carbohydrate model
 
-```{r make carbohydrate model}
-m.carb.health <- glm(carb_change_scale ~ nutrients + crab + interaction + endosym_change_scale + dflav_density_scale + gmono_density_scale + sa_T1_scale + sa_T3_scale,
-                     data = scaled_data)
+```{r carbohydrate model}
+m.carb.health <- lmer(carb_change_scale ~ nutrients + crab + interaction + 
+                        endosym_change_scale + dflav_density_scale + gmono_density_scale + 
+                        sa_T1_scale + sa_T3_scale + (1|block),
+                      # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
+                      data = scaled_data)
 ```
 
-```{r examine results}
+```{r check carb model}
 check_model(m.carb.health)
-  qqnorm(m.carb.health$residuals)
-  qqline(m.carb.health$residuals)
 ```
 
-```{r build pSEM}
+Create pSEM
+
+```{r carb pSEM}
 sem.carb <- psem(
   m.dflav, 
   m.gmono, 
@@ -270,141 +339,128 @@ sem.carb <- psem(
 )
 ```
 
-```{r examine fit}
+```{r carb summary}
 summary(sem.carb, conserve = TRUE)
+
+# for chi-squared (run on non-REML model):
+# LLchisq(sem.carb) # same as without random effect
 ```
 
-## Estimate direct and indirect effects
+**Notes on the summary output:**
+- For tests of directed separation, p-values > 0.05 means those paths are justified to exclude
+- Fischer's C statistic > 0.05 provides support for the hypothesized model structure
+- Do NOT report Chi-squared values for models fit with REML--if you want the chi-squared values (13.132 on 14 df with p = 0.516) re-run models with REML = FALSE and use `LLchisq(sem.carb)`
 
-Use the `semEff` package to calculate effects via bootstrapping
+## Bootstrap direct and indirect effects 
 
-```{r bootstrap effects}
-# bootstrap and save standardized effects
-carb.sem.boot <- bootEff(sem.carb, R = 20000, 
-                         seed = 0429) 
-
-# calculate direct, indirect, and total effects
-carb.sem.eff <- semEff(carb.sem.boot)
-```
-
-```{r examine paths}
-summary(carb.sem.eff, 
-        ci.conf = 0.95) # defaults to 95% CI and standardized, but just being thorough 
-```
-
-**Results**
-
-*Carbohydrate change*
-
-                                   Effect     Bias   Std. Err.   Lower CI Upper CI    
-                                   ------   ------   ---------   -------- --------    
- DIRECT:    nutrients            | -0.092 |  0.005 |     0.113 |   -0.335    0.109 |  
-            crab                 | -0.063 |  0.000 |     0.135 |   -0.305    0.231 |  
-            interaction          |  0.056 | -0.005 |     0.127 |   -0.196    0.300 |  
-            sa.T1.scale          | -0.509 |  0.056 |     0.128 |   -0.723   -0.283 | *
-            sa.T3.scale          |  0.044 | -0.007 |     0.127 |   -0.252    0.259 |  
-            dflav.density.scale  |  0.032 | -0.001 |     0.111 |   -0.197    0.247 |  
-            gmono.density.scale  | -0.004 | -0.015 |     0.105 |   -0.225    0.195 |  
-            endosym.change.scale |  0.114 | -0.009 |     0.139 |   -0.164    0.376 |  
-                                 |        |        |           |                   |  
- INDIRECT:  nutrients            |  0.056 | -0.004 |     0.086 |   -0.116    0.230 |  
-            crab                 |  0.001 |  0.005 |     0.039 |   -0.073    0.086 |  
-                                 |        |        |           |                   |  
- TOTAL:     nutrients            | -0.036 |  0.001 |     0.094 |   -0.241    0.133 |  
-            crab                 | -0.061 |  0.005 |     0.137 |   -0.312    0.228 |  
-            interaction          |  0.056 | -0.005 |     0.127 |   -0.196    0.300 |  
-            sa.T1.scale          | -0.509 |  0.056 |     0.128 |   -0.723   -0.283 | *
-            sa.T3.scale          |  0.044 | -0.007 |     0.127 |   -0.252    0.259 |  
-            dflav.density.scale  |  0.032 | -0.001 |     0.111 |   -0.197    0.247 |  
-            gmono.density.scale  | -0.004 | -0.015 |     0.105 |   -0.225    0.195 |  
-            endosym.change.scale |  0.114 | -0.009 |     0.139 |   -0.164    0.376 |  
-                                 |        |        |           |                   |  
- MEDIATORS: dflav.density.scale  |  0.018 | -0.001 |     0.063 |   -0.111    0.143 |  
-            gmono.density.scale  |  0.001 |  0.005 |     0.039 |   -0.073    0.086 |  
-            endosym.change.scale |  0.038 | -0.003 |     0.051 |   -0.042    0.165 |  
-
-            
-# Make protein model unscaled for percentage point change
-
-Use `protein_change` rather than `protein_change_scale`
+To estimate effects, we'll simulate new data from the fitted model, but draw new random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
 
 ```{r}
-m.prot.raw <- glm(protein_change ~ nutrients + crab + interaction + endosym_change_scale + dflav_density_scale + gmono_density_scale + sa_T1_scale + sa_T3_scale,
-                  family = gaussian(link = "identity"), data = scaled_data)
+set.seed(4290)
+
+boot.carb <- bootMer(m.carb.health, FUN = fixef, nsim = 20000, type = "parametric")
 ```
 
-```{r check model}
-check_model(m.prot.raw)
-  qqnorm(m.prot.raw$residuals)
-  qqline(m.prot.raw$residuals)
-```
+Optional: save (or load)
 
 ```{r}
-sem.prot.raw <- psem(m.dflav, 
-                     m.gmono, 
-                     m.endo, 
-                     m.prot.raw,
-                     gmono_density_scale %~~% sa_T3_scale,
-                     data = as.data.frame(scaled_data))
+# saveRDS(boot.carb, file = here("boot_carb.rds"))
+
+# if you've already saved and want to load:
+# boot.carb <- readRDS(here("boot_carb.rds"))
 ```
+
+Now stack the original coefficients (first row) on top of the bootstrapped ones (all other rows below the first)
 
 ```{r}
-summary(sem.prot.raw, conserve = TRUE)
+carb_coefs <- rbind(boot.carb$t0, boot.carb$t)
 ```
+
+Now get these into a tibble with well labeled columns. Important notes:
+1. Because of the standardization **all effects are in standard deviations of carbohydrate change per treatment**
+2. Because interaction is its own 0/1 column the "nutrients" coefficient is the nutrient effect without crabs (when interaction = 0) and nutrients + interaction is the nutrient effect with crabs (and vice versa)
+3. Indirect paths are the product of direct paths (e.g., `nutr_indirect_dflav`)
 
 ```{r}
-protein.raw.boot <- bootEff(sem.prot.raw, R = 20000, seed = 0429, parallel = "multicore", 
-                            incl.raw = TRUE) # this gets the raw values, rather than in SD's (standardized)
+tibble(
+  # make a column that labels the first row as "estimate" (the original coefficients, which we made to be the first item using rbind() above), then the rest as "boostrap"
+  type = c("estimate", rep("bootstrap", 20000)),
+  # copy the direct effects of nutrients without crab from the carb model (first row is the estimate)
+  nutr_direct_nocrab = carb_coefs[, "nutrients"],
+  # copy the direct effects of nutrients with crab from the carb model
+  nutr_direct_crab = carb_coefs[, "nutrients"] + carb_coefs[, "interaction"],
+  # get the average effect of nutrients by multiplying interaction coefficient by 1/2
+  nutr_direct_avg = carb_coefs[, "nutrients"] + 0.5*carb_coefs[, "interaction"], # averaged over crab treatments
+  # indirect effects of nutrients via fish and endosymbionts; these don't depend on crabs
+  nutr_indirect_dflav = dflav_coefs[, "nutrients"] * carb_coefs[, "dflav_density_scale"],
+  nutr_indirect_endo = endo_coefs[, "nutrients"] * carb_coefs[, "endosym_change_scale"],
+  # copy the direct effects of crab in ambient treatments from the carb model
+  crab_direct_nonutr = carb_coefs[, "crab"],
+  # get the direct effect of crab in enriched treatments
+  crab_direct_nutr = carb_coefs[, "crab"] + carb_coefs[, "interaction"],
+  # averaged over nutrient treatments
+  crab_direct_avg = carb_coefs[, "crab"] + 0.5*carb_coefs[, "interaction"],
+  # indirect effect of crab
+  crab_indirect_gmono = gmono_coefs[, "crab"] * carb_coefs[, "gmono_density_scale"],
+  # the interaction itself (difference in the nutrient effect with vs. without crabs)
+  interaction = carb_coefs[, "interaction"]
+  ) %>% 
+  # now add the total effects of nutrients (direct + both indirect paths)
+  mutate(nutr_total_nocrab = nutr_direct_nocrab + nutr_indirect_dflav + nutr_indirect_endo,
+         nutr_total_crab = nutr_direct_crab + nutr_indirect_dflav + nutr_indirect_endo,
+         nutr_total_avg = nutr_direct_avg + nutr_indirect_dflav + nutr_indirect_endo) %>% 
+  # total effects of crab (direct + indirect path through G. monodonta)
+  mutate(crab_total_nonutr = crab_direct_nonutr + crab_indirect_gmono,
+         crab_total_nutr = crab_direct_nutr + crab_indirect_gmono,
+         crab_total_avg = crab_direct_avg + crab_indirect_gmono) -> carb_effects
 ```
+
+## Get confidence intervals for each path
+
+Get each arrow for the SEM diagram (Fig. 4) and Table S5. Recall these are in units of standard deviations
 
 ```{r}
-summary(semEff(protein.raw.boot, 
-               use.raw = TRUE), # use raw values to get percentage point change
-        response = "protein.change")
+# one column per arrow in the SEM diagram (model estimate in first row, bootstrap replicates below)
+tibble(
+  type = c("estimate", rep("bootstrap", 20000)),
+  nutrients_to_dflav = dflav_coefs[, "nutrients"],
+  crab_to_gmono = gmono_coefs[, "crab"],
+  nutrients_to_endo = endo_coefs[, "nutrients"],
+  nutrients_to_carb = carb_coefs[, "nutrients"], # effect without crabs
+  crab_to_carb = carb_coefs[, "crab"], # effect without nutrients
+  interaction_to_carb = carb_coefs[, "interaction"],
+  dflav_to_carb = carb_coefs[, "dflav_density_scale"],
+  gmono_to_carb = carb_coefs[, "gmono_density_scale"],
+  endo_to_carb = carb_coefs[, "endosym_change_scale"],
+  saT1_to_carb = carb_coefs[, "sa_T1_scale"],
+  saT3_to_carb = carb_coefs[, "sa_T3_scale"]
+  ) %>% 
+  pivot_longer(-type, names_to = "path", values_to = "coef") %>% 
+  mutate(path = fct_inorder(path)) %>% 
+  group_by(path) %>% 
+  summarize(estimate = coef[type == "estimate"],
+            lower_CI = quantile(coef[type == "bootstrap"], 0.025),
+            upper_CI = quantile(coef[type == "bootstrap"], 0.975)) %>% 
+  mutate(CI_excludes_zero = sign(lower_CI) == sign(upper_CI)) # %>% view()
 ```
 
-Response 'protein.change' (4/4):
+## Summarize effects on carb
 
-                                   Effect     Bias   Std. Err.   Lower CI Upper CI    
-                                   ------   ------   ---------   -------- --------    
- DIRECT:    nutrients            | -0.938 |  0.075 |     0.242 |   -1.459   -0.536 | *
-            crab                 | -0.385 |  0.019 |     0.353 |   -1.088    0.301 |  
-            interaction          |  0.126 |  0.005 |     0.405 |   -0.637    0.960 |  
-            sa.T1.scale          | -0.931 |  0.089 |     0.197 |   -1.533   -0.657 | *
-            sa.T3.scale          |  0.357 | -0.021 |     0.148 |    0.098    0.689 | *
-            dflav.density.scale  |  0.636 | -0.037 |     0.188 |    0.362    1.142 | *
-            gmono.density.scale  | -0.367 |  0.049 |     0.158 |   -0.729   -0.113 | *
-            endosym.change.scale |  0.143 | -0.004 |     0.158 |   -0.136    0.497 |  
-                                 |        |        |           |                   |  
- INDIRECT:  nutrients            |  0.783 | -0.067 |     0.236 |    0.452    1.523 | *
-            crab                 |  0.244 | -0.027 |     0.141 |    0.031    0.640 | *
-                                 |        |        |           |                   |  
- TOTAL:     nutrients            | -0.155 |  0.007 |     0.265 |   -0.679    0.358 |  
-            crab                 | -0.141 | -0.007 |     0.365 |   -0.847    0.582 |  
-            interaction          |  0.126 |  0.005 |     0.405 |   -0.637    0.960 |  
-            sa.T1.scale          | -0.931 |  0.089 |     0.197 |   -1.533   -0.657 | *
-            sa.T3.scale          |  0.357 | -0.021 |     0.148 |    0.098    0.689 | *
-            dflav.density.scale  |  0.636 | -0.037 |     0.188 |    0.362    1.142 | *
-            gmono.density.scale  | -0.367 |  0.049 |     0.158 |   -0.729   -0.113 | *
-            endosym.change.scale |  0.143 | -0.004 |     0.158 |   -0.136    0.497 |  
-                                 |        |        |           |                   |  
- MEDIATORS: dflav.density.scale  |  0.688 | -0.062 |     0.197 |    0.413    1.330 | *
-            gmono.density.scale  |  0.244 | -0.027 |     0.141 |    0.031    0.640 | *
-            endosym.change.scale |  0.095 | -0.005 |     0.114 |   -0.064    0.422 |  
-
-
-## Compare to average initial protein content (5.59% AFDW)
+Now get: 
+1. 95% confidence intervals for effects
+2. Percentage point changes (by multiplying by one standard deviation to undo the standardization)
 
 ```{r}
-# initial protein content
-init_prot <- 5.59
-
-# for direct effect of nutrients 
--0.938/init_prot # ~-17%
-
-# for D. flavicaudus indirect effect
-0.688/init_prot # ~12%
+# calculate values
+carb_effects %>% 
+  # pivot and note that these units are in terms of 1 standard deviation
+  pivot_longer(-type, names_to = "effect", values_to = "sd_units") %>% 
+  # convert to percentage points (multiply by the SD used to scale carb_change)
+  mutate(pp = sd_units * sd(scaled_data$carb_change)) %>% 
+  mutate(effect = fct_inorder(effect)) %>% # keep effects in the order above
+  group_by(effect) %>% 
+  summarize(estimate_pp = pp[type == "estimate"], # get value for original estimate
+            lower_CI = quantile(pp[type == "bootstrap"], 0.025), # get lower CI of bootstrap values
+            upper_CI = quantile(pp[type == "bootstrap"], 0.975) # get upper CI of bootstrap values
+            ) 
 ```
-
-
-
