@@ -382,16 +382,16 @@ Now get these into a tibble with well labeled columns. Important notes:
 tibble(
   # make a column that labels the first row as "estimate" (the original coefficients, which we made to be the first item using rbind() above), then the rest as "boostrap"
   type = c("estimate", rep("bootstrap", 20000)),
-  # copy the direct effects of nutrients without crab from the protein model (first row is the estimate)
+  # copy the direct effects of nutrients without crab from the carb model (first row is the estimate)
   nutr_direct_nocrab = carb_coefs[, "nutrients"],
-  # copy the direct effects of nutrients with crab from the protein model
+  # copy the direct effects of nutrients with crab from the carb model
   nutr_direct_crab = carb_coefs[, "nutrients"] + carb_coefs[, "interaction"],
   # get the average effect of nutrients by multiplying interaction coefficient by 1/2
   nutr_direct_avg = carb_coefs[, "nutrients"] + 0.5*carb_coefs[, "interaction"], # averaged over crab treatments
   # indirect effects of nutrients via fish and endosymbionts; these don't depend on crabs
   nutr_indirect_dflav = dflav_coefs[, "nutrients"] * carb_coefs[, "dflav_density_scale"],
   nutr_indirect_endo = endo_coefs[, "nutrients"] * carb_coefs[, "endosym_change_scale"],
-  # copy the direct effects of crab in ambient treatments from the protein model
+  # copy the direct effects of crab in ambient treatments from the carb model
   crab_direct_nonutr = carb_coefs[, "crab"],
   # get the direct effect of crab in enriched treatments
   crab_direct_nutr = carb_coefs[, "crab"] + carb_coefs[, "interaction"],
@@ -429,8 +429,8 @@ tibble(
   dflav_to_carb = carb_coefs[, "dflav_density_scale"],
   gmono_to_carb = carb_coefs[, "gmono_density_scale"],
   endo_to_carb = carb_coefs[, "endosym_change_scale"],
-  saT1_to_prot = carb_coefs[, "sa_T1_scale"],
-  saT3_to_prot = carb_coefs[, "sa_T3_scale"]
+  saT1_to_carb = carb_coefs[, "sa_T1_scale"],
+  saT3_to_carb = carb_coefs[, "sa_T3_scale"]
   ) %>% 
   pivot_longer(-type, names_to = "path", values_to = "coef") %>% 
   mutate(path = fct_inorder(path)) %>% 
@@ -452,7 +452,7 @@ Now get:
 carb_effects %>% 
   # pivot and note that these units are in terms of 1 standard deviation
   pivot_longer(-type, names_to = "effect", values_to = "sd_units") %>% 
-  # convert to percentage points (multiply by the SD used to scale protein_change)
+  # convert to percentage points (multiply by the SD used to scale carb_change)
   mutate(pp = sd_units * sd(scaled_data$carb_change)) %>% 
   mutate(effect = fct_inorder(effect)) %>% # keep effects in the order above
   group_by(effect) %>% 
