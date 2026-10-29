@@ -182,6 +182,18 @@ summary(sem.prot, conserve = TRUE)
 
 To estimate effects, we'll simulate new data from the fitted model, but draw new random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
 
+Optional: load
+
+```{r}
+# if you've already saved and want to load:
+# boot.dflav <- readRDS(here("boot_dflav.rds"))
+# boot.gmono <- readRDS(here("boot_gmono.rds"))
+# boot.endo <- readRDS(here("boot_endo.rds"))
+# boot.prot <- readRDS(here("boot_protein.rds"))
+```
+
+Run bootstraps anew
+
 ```{r}
 set.seed(0429)
 
@@ -191,19 +203,13 @@ boot.endo <- bootMer(m.endo, FUN = fixef, nsim = 20000, type = "parametric")
 boot.prot <- bootMer(m.prot.health, FUN = fixef, nsim = 20000, type = "parametric")
 ```
 
-Optional: save (or load)
+Optional: save (if you want to load next time)
 
 ```{r}
 # saveRDS(boot.dflav, file = here("boot_dflav.rds"))
 # saveRDS(boot.gmono, file = here("boot_gmono.rds"))
 # saveRDS(boot.endo, file = here("boot_endo.rds"))
 # saveRDS(boot.prot, file = here("boot_protein.rds"))
-
-# if you've already saved and want to load:
-# boot.dflav <- readRDS(here("boot_dflav.rds"))
-# boot.gmono <- readRDS(here("boot_gmono.rds"))
-# boot.endo <- readRDS(here("boot_endo.rds"))
-# boot.prot <- readRDS(here("boot_protein.rds"))
 ```
 
 Now stack the original coefficients (first row) on top of the bootstrapped ones (all other rows below the first)
@@ -355,19 +361,23 @@ summary(sem.carb, conserve = TRUE)
 
 To estimate effects, we'll simulate new data from the fitted model, but draw new random effects and random residual noise, then refit the model to that dataset (n = 20,000 times)
 
+Optional: load (if you've already run and save)
+
+```{r}
+# if you've already saved and want to load:
+# boot.carb <- readRDS(here("boot_carb.rds"))
+```
+
 ```{r}
 set.seed(4290)
 
 boot.carb <- bootMer(m.carb.health, FUN = fixef, nsim = 20000, type = "parametric")
 ```
 
-Optional: save (or load)
+Optional: save (if you want to load next time)
 
 ```{r}
 # saveRDS(boot.carb, file = here("boot_carb.rds"))
-
-# if you've already saved and want to load:
-# boot.carb <- readRDS(here("boot_carb.rds"))
 ```
 
 Now stack the original coefficients (first row) on top of the bootstrapped ones (all other rows below the first)
