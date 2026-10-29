@@ -280,7 +280,7 @@ tibble(
   summarize(estimate = coef[type == "estimate"],
             lower_CI = quantile(coef[type == "bootstrap"], 0.025),
             upper_CI = quantile(coef[type == "bootstrap"], 0.975)) %>% 
-  mutate(CI_excludes_zero = sign(lower_CI) == sign(upper_CI)) # %>% view()
+  mutate(CI_excludes_zero = sign(lower_CI) == sign(upper_CI))  
 ```
 
 ## Summarize effects on protein
@@ -302,7 +302,10 @@ prot_effects %>%
   mutate(pp = sd_units * sd(scaled_data$protein_change)) %>% 
   mutate(effect = fct_inorder(effect)) %>% # keep effects in the order above
   group_by(effect) %>% 
-  summarize(estimate_pp = pp[type == "estimate"], # get value for original estimate
+  summarize(estimate_sd = sd_units[type == "estimate"], 
+            lower_CI = quantile(sd_units[type == "bootstrap"], 0.025),
+            upper_CI = quantile(sd_units[type == "bootstrap"], 0.975),
+            estimate_pp = pp[type == "estimate"], # get value for original estimate
             lower_CI = quantile(pp[type == "bootstrap"], 0.025), # get lower CI of bootstrap values
             upper_CI = quantile(pp[type == "bootstrap"], 0.975) # get upper CI of bootstrap values
             ) %>% 
