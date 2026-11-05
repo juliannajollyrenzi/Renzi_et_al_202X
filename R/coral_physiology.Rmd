@@ -91,16 +91,16 @@ sa_data <- inner_join(metadata, physiology_1)
 ```
 
 ```{r}
-m.sa.T1 <- glmmTMB(sa_cm2_T1 ~ treatment, family = Gamma(link = "log"), data = sa_data)
+m.sa.init <- glmmTMB(sa_cm2_initial ~ treatment, family = Gamma(link = "log"), data = sa_data)
 ```
 
 ```{r}
-m.sa.T3 <- glmmTMB(sa_cm2_T3 ~ treatment, family = Gamma(link = "log"), data = sa_data)
+m.sa.final <- glmmTMB(sa_cm2_final ~ treatment, family = Gamma(link = "log"), data = sa_data)
 ```
 
 ```{r}
-car::Anova(m.sa.T1, type = 2) # no differences
-car::Anova(m.sa.T3, type = 2) # no differences
+car::Anova(m.sa.init, type = 2) # no differences
+car::Anova(m.sa.final, type = 2) # no differences
 ```
 
 # Protein change
@@ -142,7 +142,7 @@ physiology_2 %>%
 ## Model
 
 ```{r make model}
-m.prot.1 <- glmmTMB(protein_change ~ crab + nutrients + crab:nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
+m.prot.1 <- glmmTMB(protein_change ~ crab + nutrients + crab:nutrients + sa_cm2_initial + sa_cm2_final + (1|block), 
                   family = gaussian("identity"),
                   contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = physiology_2)
@@ -166,7 +166,7 @@ car::Anova(m.prot.1, type = 3)
 Drop interaction
 
 ```{r make model}
-m.prot.2 <- glmmTMB(protein_change ~ crab + nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
+m.prot.2 <- glmmTMB(protein_change ~ crab + nutrients + sa_cm2_initial + sa_cm2_final + (1|block), 
                   family = gaussian("identity"),
                   data = physiology_2)
 ```
@@ -222,7 +222,7 @@ physiology_2 %>%
 ## Model
 
 ```{r make model}
-m.carb.1 <- glmmTMB(carb_change ~ crab + nutrients + crab:nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
+m.carb.1 <- glmmTMB(carb_change ~ crab + nutrients + crab:nutrients + sa_cm2_initial + sa_cm2_final + (1|block), 
                   family = gaussian(),
                   contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = physiology_2)
@@ -246,7 +246,7 @@ car::Anova(m.carb.1, type = 3)
 Drop interaction term
 
 ```{r make model}
-m.carb.2 <- glmmTMB(carb_change ~ crab + nutrients + sa_cm2_T1 + sa_cm2_T3 + (1|block), 
+m.carb.2 <- glmmTMB(carb_change ~ crab + nutrients + sa_cm2_initial + sa_cm2_final + (1|block), 
                   family = gaussian(),
                   data = physiology_2)
 ```

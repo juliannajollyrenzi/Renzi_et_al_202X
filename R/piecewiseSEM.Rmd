@@ -85,8 +85,8 @@ metadata %>%
          endosym_change_scale = scale(endosym_percent_change)[,1],
          dflav_density_scale = scale(dflav_density_per_1000cm3)[,1],
          gmono_density_scale = scale(gmono_density_per_1000cm3)[,1],
-         sa_T1_scale = scale(sa_cm2_T1)[,1],
-         sa_T3_scale = scale(sa_cm2_T3)[,1]
+         sa_initial_scale = scale(sa_cm2_initial)[,1],
+         sa_final_scale = scale(sa_cm2_final)[,1]
          ) -> scaled_data
 ```
 
@@ -144,7 +144,7 @@ check_model(m.endo)
 ```{r protein model}
 m.prot.health <- lmer(protein_change_scale ~ nutrients + crab + interaction + 
                         endosym_change_scale + dflav_density_scale + gmono_density_scale + 
-                        sa_T1_scale + sa_T3_scale + (1|block),
+                        sa_initial_scale + sa_final_scale + (1|block),
                       # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
                       data = scaled_data)
 ```
@@ -161,7 +161,7 @@ sem.prot <- psem(
   m.gmono, 
   m.endo, 
   m.prot.health,
-  gmono_density_scale %~~% sa_T3_scale, # correlated error
+  gmono_density_scale %~~% sa_final_scale, # correlated error
   data = as.data.frame(scaled_data)
 )
 ```
@@ -277,8 +277,8 @@ tibble(
   dflav_to_prot = prot_coefs[, "dflav_density_scale"],
   gmono_to_prot = prot_coefs[, "gmono_density_scale"],
   endo_to_prot = prot_coefs[, "endosym_change_scale"],
-  saT1_to_prot = prot_coefs[, "sa_T1_scale"],
-  saT3_to_prot = prot_coefs[, "sa_T3_scale"]
+  saInit_to_prot = prot_coefs[, "sa_initial_scale"],
+  saFinal_to_prot = prot_coefs[, "sa_final_scale"]
   ) %>% 
   pivot_longer(-type, names_to = "path", values_to = "coef") %>% 
   mutate(path = fct_inorder(path)) %>% 
@@ -323,7 +323,7 @@ prot_effects %>%
 ```{r carbohydrate model}
 m.carb.health <- lmer(carb_change_scale ~ nutrients + crab + interaction + 
                         endosym_change_scale + dflav_density_scale + gmono_density_scale + 
-                        sa_T1_scale + sa_T3_scale + (1|block),
+                        sa_initial_scale + sa_final_scale + (1|block),
                       # REML = FALSE, # add if you want to calculate SEM chi-squared (but then won't work with summary())
                       data = scaled_data)
 ```
@@ -340,7 +340,7 @@ sem.carb <- psem(
   m.gmono, 
   m.endo, 
   m.carb.health,
-  gmono_density_scale %~~% sa_T3_scale, # correlated error
+  gmono_density_scale %~~% sa_final_scale, # correlated error
   data = as.data.frame(scaled_data)
 )
 ```
@@ -442,8 +442,8 @@ tibble(
   dflav_to_carb = carb_coefs[, "dflav_density_scale"],
   gmono_to_carb = carb_coefs[, "gmono_density_scale"],
   endo_to_carb = carb_coefs[, "endosym_change_scale"],
-  saT1_to_carb = carb_coefs[, "sa_T1_scale"],
-  saT3_to_carb = carb_coefs[, "sa_T3_scale"]
+  saInit_to_carb = carb_coefs[, "sa_initial_scale"],
+  saFinal_to_carb = carb_coefs[, "sa_final_scale"]
   ) %>% 
   pivot_longer(-type, names_to = "path", values_to = "coef") %>% 
   mutate(path = fct_inorder(path)) %>% 
