@@ -125,8 +125,8 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 * protein_change: The difference between the final and starting protein content of a coral colony in percentage points (numeric)
 * carb_change: The difference between the final and starting carbohydrate content of a coral colony in percentage points (numeric)
 * endosym_percent_change: The percent change in endosymbiont density over the course of the experiment (numeric)
-* sa_cm2_initial: The surface area (${cm}^{2}$) of the coral fragment used for physiology metrics at the start of the experiment (numeric)
-* sa_cm2_final: The surface area (${cm}^{2}$) of the coral fragment used for physiology metrics at the end of the experiment (numeric)
+* sa_cm2_initial: The surface area in square centimeters of the coral fragment used for physiology metrics at the start of the experiment (numeric)
+* sa_cm2_final: The surface area in square centimeters of the coral fragment used for physiology metrics at the end of the experiment (numeric)
 
 ## File: water_nutrients.csv
 
