@@ -29,7 +29,8 @@ librarian::shelf(here, # relative file paths
                  patchwork, # for putting figures together
                  performance, # for check homogeneity
                  emmeans, # for contrasts
-                 ggtext # yaxis labels
+                 ggtext, # yaxis labels
+                 ggnewscale # second color scale on one plot
                  )
 ```
 
