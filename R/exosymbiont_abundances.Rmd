@@ -140,7 +140,7 @@ m.vol <- glmmTMB(coral_vol_cm3 ~ treatment,
                     data = total_abund) 
 ```
 
-```{r test assumptions}
+```{r test volume model assumptions}
 # get residuals
 resid.m.vol <- DHARMa::simulateResiduals(m.vol)
 
@@ -150,7 +150,7 @@ check_homogeneity(m.vol)
 check_model(m.vol)
 ```
 
-```{r examine results}
+```{r examine volume model results}
 car::Anova(m.vol, type = 2) 
 ```
 
@@ -206,14 +206,14 @@ dev.off()
 
 ## Model
 
-```{r tweedie}
+```{r exosymbiont density model}
 m.abund.1 <- glmmTMB(density_1000cm3 ~ crab + nutrients + crab:nutrients + (1|block), 
                            family = tweedie(link = "log"),
                      contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                            data = total_abund)
 ```
 
-```{r test assumptions}
+```{r test exosymbiont density model assumptions}
 # get residuals
 resid.m.abund.1 <- DHARMa::simulateResiduals(m.abund.1)
 
@@ -224,19 +224,19 @@ testQuantiles(resid.m.abund.1, plot = T)
 check_model(m.abund.1)
 ```
 
-```{r examine results}
+```{r examine exosymbiont density model results}
 car::Anova(m.abund.1, type = 3)
 ```
 
 Drop interaction
 
-```{r tweedie}
+```{r second exosymbiont density model}
 m.abund.2 <- glmmTMB(density_1000cm3 ~ crab + nutrients + (1|block), 
                            family = tweedie(link = "log"),
                            data = total_abund)
 ```
 
-```{r test assumptions}
+```{r test second exosymbiont density model assumptions}
 # get residuals
 resid.m.abund.2 <- DHARMa::simulateResiduals(m.abund.2)
 
@@ -247,7 +247,7 @@ testQuantiles(resid.m.abund.2, plot = T)
 check_model(m.abund.2)
 ```
 
-```{r examine results}
+```{r examine second exosymbiont density model results}
 car::Anova(m.abund.2, type = 2) # also no effect if Trapezids are filtered out (edit initial chunk to check)
 ```
 
@@ -256,14 +256,14 @@ car::Anova(m.abund.2, type = 2) # also no effect if Trapezids are filtered out (
 
 ## Model
 
-```{r D. flav ~ treatments}
+```{r D flav model}
 m.dflav.1 <- glmmTMB(dflav_density_per_1000cm3 ~ crab + nutrients + crab:nutrients + (1|block), 
                      family =  tweedie(link = "log"),
                      contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                      data = metadata)
 ```
 
-```{r test assumptions}
+```{r test D flav model assumptions}
 # get residuals
 resid.dflav.1 <- DHARMa::simulateResiduals(m.dflav.1)
 
@@ -274,19 +274,19 @@ testQuantiles(resid.dflav.1, plot = T)
 check_model(m.dflav.1)
 ```
 
-```{r examine results}
+```{r examine D flav model results}
 car::Anova(m.dflav.1, type = 3)
 ```
 
 Drop the interaction
 
-```{r D. flav ~ treatments}
+```{r second D flav model}
 m.dflav.2 <- glmmTMB(dflav_density_per_1000cm3 ~ crab + nutrients +  (1|block), 
                      family =  tweedie(link = "log"),
                      data = metadata)
 ```
 
-```{r test assumptions}
+```{r test second D flav model assumptions}
 # get residuals
 resid.dflav.2 <- DHARMa::simulateResiduals(m.dflav.2)
 
@@ -297,7 +297,7 @@ testQuantiles(resid.dflav.2, plot = T)
 check_model(m.dflav.2)
 ```
 
-```{r examine results}
+```{r examine second D flav model results}
 car::Anova(m.dflav.2, type = 2)
 ```
 
@@ -354,7 +354,7 @@ m.gmono.1 <- glmmTMB(gmono_density_per_1000cm3 ~ crab + nutrients + crab:nutrien
                      data = metadata) 
 ```
 
-```{r test assumptions}
+```{r test G mono model assumptions}
 # get residuals
 resid.gmono.1 <- DHARMa::simulateResiduals(m.gmono.1)
 
@@ -367,19 +367,19 @@ check_model(m.gmono.1)
 
 Looks all right. Check results
 
-```{r examine results}
+```{r examine G mono model results}
 car::Anova(m.gmono.1, type = 3)
 ```
 
 Drop interaction
 
-```{r}
+```{r second G mono model}
 m.gmono.2 <- glmmTMB(gmono_density_per_1000cm3 ~ crab + nutrients + (1|block), 
                      family = Gamma(link = "log"), 
                      data = metadata) 
 ```
 
-```{r test assumptions}
+```{r test second G mono model assumptions}
 # get residuals
 resid.gmono.2 <- DHARMa::simulateResiduals(m.gmono.2)
 
@@ -392,7 +392,7 @@ check_model(m.gmono.2)
 
 Looks all right. Check results
 
-```{r examine results}
+```{r examine second G mono model results}
 car::Anova(m.gmono.2, type = 2)
 ```
 

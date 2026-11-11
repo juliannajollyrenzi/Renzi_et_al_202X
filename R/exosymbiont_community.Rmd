@@ -143,7 +143,7 @@ taxa_diversity_1 %>%
 
 Richness plot
 
-```{r plot}
+```{r plot richness}
 taxa_diversity_2 %>% 
   ggplot(aes(x = Nutrients, y = richness, fill = Crab)) +
   geom_boxplot(size = bxp_size,
@@ -162,14 +162,14 @@ taxa_diversity_2 %>%
 
 ## Model
 
-```{r model}
+```{r model richness}
 m.rich.1 <- glmmTMB(richness ~ crab + nutrients + crab:nutrients + (1|block),
                     family = poisson(link = "log"),
                     contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                     data = taxa_diversity_2)
 ```
 
-```{r test assumptions}
+```{r test richness model assumptions}
 resid.m.rich.1 <- DHARMa::simulateResiduals(m.rich.1)
 
 testResiduals(resid.m.rich.1, plot = T)
@@ -181,19 +181,19 @@ check_model(m.rich.1)
 
 Examine results
 
-```{r examine results}
+```{r examine richness model results}
 car::Anova(m.rich.1, type = 3) 
 ```
 
 Drop interaction
 
-```{r model}
+```{r second richness model}
 m.rich.2 <- glmmTMB(richness ~ crab + nutrients + (1|block),
                     family = poisson(link = "log"),
                     data = taxa_diversity_2)
 ```
 
-```{r test assumptions}
+```{r test second richness model assumptions}
 resid.m.rich.2 <- DHARMa::simulateResiduals(m.rich.2)
 
 testResiduals(resid.m.rich.2, plot = T)
@@ -205,13 +205,13 @@ check_model(m.rich.2)
 
 Examine results
 
-```{r examine results}
+```{r examine second richness model results}
 car::Anova(m.rich.2, type = 2) # also no effect if Trapezids are filtered out (edit initial chunk to check)
 ```
 
 # Evenness
 
-```{r plot}
+```{r evenness plot}
 taxa_diversity_2 %>% 
   ggplot(aes(x = Nutrients, y = evenness, fill = Crab)) +
   geom_boxplot(size = bxp_size,
@@ -230,14 +230,14 @@ taxa_diversity_2 %>%
 
 ## Model
 
-```{r first model}
+```{r evenness model}
 m.even.1 <- glmmTMB((evenness) ~ crab + nutrients + crab:nutrients  + (1|block),
                   family = Gamma(link = "log"),
                   contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = taxa_diversity_2)
 ```
 
-```{r test assumptions}
+```{r test evenness model assumptions}
 resid.m.even.1 <- DHARMa::simulateResiduals(m.even.1)
 
 testResiduals(resid.m.even.1, plot = T)
@@ -247,19 +247,19 @@ testQuantiles(resid.m.even.1, plot = T)
 check_model(m.even.1)
 ```
 
-```{r examine results}
+```{r examine evenness modelresults}
 car::Anova(m.even.1, type = 3) 
 ```
 
 Drop interaction term
 
-```{r second model}
+```{r second evenness model}
 m.even.2 <- glmmTMB((evenness) ~ crab + nutrients + (1|block),
                   family = Gamma(link = "log"),
                   data = taxa_diversity_2)
 ```
 
-```{r test assumptions}
+```{r test second evenness model assumptions}
 resid.m.even.2 <- DHARMa::simulateResiduals(m.even.2)
 
 testResiduals(resid.m.even.2, plot = T)
@@ -269,7 +269,7 @@ testQuantiles(resid.m.even.2, plot = T)
 check_model(m.even.2)
 ```
 
-```{r examine results}
+```{r examine second evenness model results}
 car::Anova(m.even.2, type = 2) # also no effect if Trapezids are filtered out (edit initial chunk to check)
 ```
 

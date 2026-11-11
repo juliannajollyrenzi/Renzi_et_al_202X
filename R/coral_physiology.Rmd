@@ -120,7 +120,7 @@ physiology_1 %>%
 
 Then, plot differences among treatments
 
-```{r plot}
+```{r plot protein}
 physiology_2 %>% 
   ggplot(aes(x = Crab, y = protein_change, fill = Nutrients)) +
   geom_boxplot(size = bxp_size,
@@ -141,7 +141,7 @@ physiology_2 %>%
 
 ## Model
 
-```{r make model}
+```{r make protein model}
 m.prot.1 <- glmmTMB(protein_change ~ crab + nutrients + crab:nutrients + sa_cm2_initial + sa_cm2_final + (1|block), 
                   family = gaussian("identity"),
                   contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
@@ -159,19 +159,19 @@ testQuantiles(resid.m.prot.1, plot = T)
 check_model(m.prot.1)
 ```
 
-```{r examine results}
+```{r examine protein results}
 car::Anova(m.prot.1, type = 3) 
 ```
 
 Drop interaction
 
-```{r make model}
+```{r make second protein model}
 m.prot.2 <- glmmTMB(protein_change ~ crab + nutrients + sa_cm2_initial + sa_cm2_final + (1|block), 
                   family = gaussian("identity"),
                   data = physiology_2)
 ```
 
-```{r test assumptions}
+```{r test second protein model assumptions}
 # get residuals
 resid.m.prot.2 <- DHARMa::simulateResiduals(m.prot.2, n = 1000)
 
@@ -182,7 +182,7 @@ testQuantiles(resid.m.prot.2, plot = T)
 check_model(m.prot.2)
 ```
 
-```{r examine results}
+```{r examine second protein model results}
 car::Anova(m.prot.2, type = 2) 
 ```
 
@@ -200,7 +200,7 @@ car::Anova(m.prot.3, type = 2) # still no effect
 
 Plot differences among treatments
 
-```{r plot}
+```{r plot carbohydrate change}
 physiology_2 %>% 
   ggplot(aes(x = Crab, y = carb_change, fill = Nutrients)) +
   geom_boxplot(size = bxp_size,
@@ -221,14 +221,14 @@ physiology_2 %>%
 
 ## Model
 
-```{r make model}
+```{r make carbohydrate model}
 m.carb.1 <- glmmTMB(carb_change ~ crab + nutrients + crab:nutrients + sa_cm2_initial + sa_cm2_final + (1|block), 
                   family = gaussian(),
                   contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = physiology_2)
 ```
 
-```{r test assumptions}
+```{r test carbohydrate assumptions}
 # get residuals
 resid.m.carb.1 <- DHARMa::simulateResiduals(m.carb.1, n = 1000)
 
@@ -239,19 +239,19 @@ testQuantiles(resid.m.carb.1, plot = T)
 check_model(m.carb.1)
 ```
 
-```{r examine results}
+```{r examine carbohydrate results}
 car::Anova(m.carb.1, type = 3)
 ```
 
 Drop interaction term
 
-```{r make model}
+```{r make second carbohydrate model}
 m.carb.2 <- glmmTMB(carb_change ~ crab + nutrients + sa_cm2_initial + sa_cm2_final + (1|block), 
                   family = gaussian(),
                   data = physiology_2)
 ```
 
-```{r test assumptions}
+```{r test second carbohydrate model assumptions}
 # get residuals
 resid.m.carb.2 <- DHARMa::simulateResiduals(m.carb.2, n = 1000)
 
@@ -262,7 +262,7 @@ testQuantiles(resid.m.carb.2, plot = T)
 check_model(m.carb.2)
 ```
 
-```{r examine results}
+```{r examine second carbohydrate model results}
 car::Anova(m.carb.2, type = 2)
 ```
 
@@ -281,7 +281,7 @@ car::Anova(m.carb.3, type = 2) # still no effect
 
 ## Plot
 
-```{r plot}
+```{r plot tissue loss}
 # use metadata because want to include coral #25
 metadata %>% 
   # get column names/values nice for plotting
@@ -314,7 +314,7 @@ m.tl.1 <- glmmTMB(tissue_loss_5_percent ~ crab + nutrients + crab:nutrients + (1
                   data = metadata)
 ```
 
-```{r test assumptions}
+```{r test tissue loss model assumptions}
 # get residuals
 resid.m.tl.1 <- DHARMa::simulateResiduals(m.tl.1, n = 1000)
 
@@ -325,7 +325,7 @@ testQuantiles(resid.m.tl.1, plot = T)
 check_model(m.tl.1)
 ```
 
-```{r examine results}
+```{r examine tissue loss model results}
 car::Anova(m.tl.1, type = 3) 
 ```
 
@@ -337,7 +337,7 @@ m.tl.2 <- glmmTMB(tissue_loss_5_percent ~ crab + nutrients + (1|block),
                   data = metadata)
 ```
 
-```{r test assumptions}
+```{r test second tissue loss model assumptions}
 # get residuals
 resid.m.tl.2 <- DHARMa::simulateResiduals(m.tl.2, n = 1000)
 
@@ -356,7 +356,7 @@ car::Anova(m.tl.2, type = 2)
 
 First plot
 
-```{r}
+```{r plot endosymbionts}
 physiology_2 %>% 
   ggplot(aes(x = Crab, y = endosym_percent_change, fill = Nutrients)) +
   geom_boxplot(size = bxp_size,
@@ -376,14 +376,14 @@ physiology_2 %>%
 
 ## Model 
 
-```{r make model}
+```{r make endosymbiont model}
 m.endo.1 <- glmmTMB(endosym_percent_change ~ crab + nutrients + crab:nutrients + (1|block), 
                   family = gaussian(link = "identity"),
                   contrasts = list(crab = "contr.sum", nutrients = "contr.sum"), # sum-to-zero so type III main effects are averaged over the other treatment
                   data = physiology_2)
 ```
 
-```{r test assumptions}
+```{r test endosymbiont model assumptions}
 # get residuals
 resid.m.endo.1 <- DHARMa::simulateResiduals(m.endo.1, n = 1000)
 
@@ -394,19 +394,19 @@ testQuantiles(resid.m.endo.1, plot = T)
 check_model(m.endo.1)
 ```
 
-```{r examine results}
+```{r examine endosymbiont model results}
 car::Anova(m.endo.1, type = 3)
 ```
 
 Drop interaction term
 
-```{r make model}
+```{r make second endosymbiont model}
 m.endo.2 <- glmmTMB(endosym_percent_change ~ crab + nutrients + (1|block), 
                   family = gaussian(link = "identity"),
                   data = physiology_2)
 ```
 
-```{r test assumptions}
+```{r test second endosymbiont model assumptions}
 # get residuals
 resid.m.endo.2 <- DHARMa::simulateResiduals(m.endo.2, n = 1000)
 
@@ -417,7 +417,7 @@ testQuantiles(resid.m.endo.2, plot = T)
 check_model(m.endo.2)
 ```
 
-```{r examine results}
+```{r examine second endosymbiont model results}
 car::Anova(m.endo.2, type = 2)
 ```
 

@@ -9,11 +9,22 @@ Data and analysis for Renzi et al. 202X (*Fish and crab mutualists mitigate the 
 
 ## Permanent data availability
 
-Upon acceptance, all data will be permanently available on EDI and all code will be published on Zenodo. We will then update associated links here.
+Upon acceptance, all data will be permanently available on EDI and all code will be published on Zenodo. See published manuscript for DOIs.
 
 ## Description of the data and file structure
 
-All data are stored in the data folder and all scripts are stored in the R folder. All scripts use relative file paths and can be run in any order. Note that Figures 4 and S1 were made outside R and the SEM code takes ~8 minutes to run.
+All data are stored in the data folder and all scripts are stored in the R folder. All scripts use relative file paths and can be run in any order. Note that:
+
+- `coral_physiology.Rmd` generates **Figure 1** and output for **Table S3**
+- `tbiden_abundance.Rmd` generates **Figure 2**
+- `exosymbiont_abundances.Rmd` generates **Figure 3** (illustrations added separately)
+- `piecewiseSEM.Rmd` generates the values used in **Figure 4** and output for **Table S5**
+- `tissue_loss_full.Rmd` generates **Figure 5** and output for **Table S4**
+- `exosymbiont_community.Rmd` generates the **Table S1**
+- `water_nutrients.Rmd` generates **Figure S2**
+- `exosymbiont_abundances.Rmd` generates **Figure S3**
+
+Note that Figures 4 and S1 were made outside R and the SEM code takes ~8 minutes to run.
 
 ### Files and variables
 
