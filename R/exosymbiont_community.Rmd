@@ -331,6 +331,7 @@ metadata %>%
 ## PERMANOVA
 
 ```{r}
+set.seed(0429)
 adonis2(taxa_mat_1[,-1] ~ crab + nutrients + crab:nutrients, 
         strata = metadata$block, 
         data = metadata, 

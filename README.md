@@ -20,9 +20,9 @@ All data are stored in the data folder and all scripts are stored in the R folde
 - `exosymbiont_abundances.Rmd` generates **Figure 3** (illustrations added separately)
 - `piecewiseSEM.Rmd` generates the values used in **Figure 4** and output for **Table S5**
 - `tissue_loss_full.Rmd` generates **Figure 5** and output for **Table S4**
-- `exosymbiont_community.Rmd` generates the **Table S1**
 - `water_nutrients.Rmd` generates **Figure S2**
 - `exosymbiont_abundances.Rmd` generates **Figure S3**
+- `exosymbiont_community.Rmd` generates **Figure S4** and **Table S1**
 
 Note that Figures 4 and S1 were made outside R and the SEM code takes ~8 minutes to run.
 
