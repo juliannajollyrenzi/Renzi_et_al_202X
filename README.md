@@ -1,5 +1,5 @@
 # Renzi et al. 202X
-Data and analysis for Renzi et al. 202X (*Fish and crab mutualists mitigate the adverse effects of nutrient enrichment on corals*), which we are currently submitting for peer review.
+Data and analysis for Renzi et al. 202X (*Fish and crab mutualists mitigate the adverse effects of nutrient enrichment on corals*), which is under peer review.
 
 - `data` folder contains original data from the project
 - `figures` folder stores figure outputs from code in PDF format
@@ -13,7 +13,7 @@ Upon acceptance, all data will be permanently available on EDI and all code will
 
 ## Description of the data and file structure
 
-All data are stored in the data folder and all scripts are stored in the R folder. All scripts use relative file paths and can be run in any order.
+All data are stored in the data folder and all scripts are stored in the R folder. All scripts use relative file paths and can be run in any order. Note that Figures 4 and S1 were made outside R and the SEM code takes ~8 minutes to run.
 
 ### Files and variables
 
@@ -43,13 +43,13 @@ All corals were cleared of exosymbionts (i.e., coral-associated fishes and inver
 
 ### Permitting
 
-All research was based out of the University of California Gump Research Station and conducted on the north shore of Moorea, an island in the Society Islands archipelago. Research was completed under permits issued by the Territorial Government of French Polynesia (Délégation à la Recherche) and the Haut-Commissariat de la République en Polynésie Francaise (DTRT). Coral tissue samples were transported under the Convention sur le commerce international des espèces de flore et de faune sauvages menaces d’extinction (CITES) export permit FR2198700097-E. 
+All research was based out of the University of California Gump Research Station and conducted on the north shore of Moorea, an island in the Society Islands archipelago. Research was completed under permits issued by the Territorial Government of French Polynesia (Délégation à la Recherche) and the Haut-Commissariat de la République en Polynésie Française (DTRT). Coral tissue samples were transported under the Convention sur le commerce international des espèces de flore et de faune sauvages menaces d’extinction (CITES) export permit FR2198700097-E. 
 
 ### Recommended Citation
 
 Official citation forthcoming
 
-Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W. Osenberg, and Deron E. Burkepile (202X). Fish and crab mutualists mitigate the adverse effects of nutrient enrichment on corals. *In prep*.
+Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W. Osenberg, and Deron E. Burkepile. Fish and crab mutualists mitigate the adverse effects of nutrient enrichment on corals.
 
 ### Acknowledgements
 
@@ -81,7 +81,7 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 *Metadata associated with each coral colony*
 
 **Description:** Information about coral colonies (e.g., volume, block, treatment) as well as information on key exosymbionts associated with that colony. Key exosymbionts include: 
-- *Trapezia bidentata*, the mutualistic crab we used in experimental treatments (we surveyed abundances of *T. bidentata* after 1 month and 13 months of experimental treatments)
+- *Trapezia bidentata*, the mutualistic crab we used in experimental treatments (we surveyed abundances of *T. bidentata* after ~1 month and 13 months of experimental treatments)
 - *Dascyllus flavicaudus*, a coral mutaulist associated with improved oxygenation, reduced sedimentation, and beneficial nutrient excretions 
 - *Galeropsis monodonta*, a coral parasite that feeds on *Pocillopora* coral tissue
 
@@ -106,7 +106,7 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 
 *Change in proteins, carbohydrates, and endosymbiont densities for experimental corals after 13 months*
 
-**Description:** Change in protein content, change in carbohydrate content, and percent change in endosymbiont densities for experimental coral colonies, quantified from airbrushed coral tissue. Protein and carbohydrate content are calculated as a percentage of ash free dry weight. Change in protein/carbohydrate content is the protein/carbohydrate content for a coral at the end of the experiment minus the protein/carbohydrate content for that same coral at the start of the experiment. We quantified protein content using a Pierce BCA Protein Assay Kit with bovine serum albumin standard with 3 technical replicates for each sample and standard. We quantified carbohydrate content using a sulfuric acid incubation and glucose standards (Masuko et al. 2005, Baumann et al. 2021) with 3 technical replicates. We quantified endosymbiont densities using a Marienfled 0.100 mm hemocytometer using established methods (Becker et al. 2021), which we normalized to coral surface area to get the number of endosymbiont cells per square centimeter of tissue. Coral surface area was calculated using standard wax dipping techniques. Percent change of endosymbiont densities was calculated as the endosymbiont density at the end of the experiment minus the density at the start of the experiment divided by the density at the start of the experiment.
+**Description:** Change in protein content, change in carbohydrate content, and percent change in endosymbiont densities for experimental coral colonies, quantified from airbrushed coral tissue. Protein and carbohydrate content are calculated as a percentage of ash free dry weight. Change in protein/carbohydrate content is the protein/carbohydrate content for a coral at the end of the experiment minus the protein/carbohydrate content for that same coral at the start of the experiment. We quantified protein content using a Pierce BCA Protein Assay Kit with bovine serum albumin standard with 3 technical replicates for each sample and standard. We quantified carbohydrate content using a sulfuric acid incubation and glucose standards (Masuko et al. 2005, Baumann et al. 2021) with 3 technical replicates. We quantified endosymbiont densities using a Marienfeld 0.100 mm hemocytometer using established methods (Becker et al. 2021), which we normalized to coral surface area to get the number of endosymbiont cells per square centimeter of tissue. Coral surface area was calculated using standard wax dipping techniques. Percent change of endosymbiont densities was calculated as the endosymbiont density at the end of the experiment minus the density at the start of the experiment divided by the density at the start of the experiment.
 
 #### Variables
 
@@ -114,6 +114,8 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 * protein_change: The difference between the final and starting protein content of a coral colony (numeric)
 * carb_change: The difference between the final and starting carbohydrate content of a coral colony (numeric)
 * endosym_percent_change: The percent change in endosymbiont density over the course of the experiment (numeric)
+* sa_cm2_initial: The surface area (${cm}^{2}$) of the coral fragment used for physiology metrics at the start of the experiment (numeric)
+* sa_cm2_final: The surface area (${cm}^{2}$) of the coral fragment used for physiology metrics at the end of the experiment (numeric)
 
 ## File: water_nutrients.csv
 
@@ -125,7 +127,7 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 
 * coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
 * timepoint: Whether the water sample is from 4 days (timepoint = 1) or 1 month (timepoint = 2) after nutrients addition (integer/factor)
-* nitrite_nitrate_umol: Concentration of nitrate + nitrite in seawater in µmol (numeric)
+* nitrite_nitrate_uM: Concentration of nitrate + nitrite in seawater in µM (numeric)
 * nitrite_nitrate_belowlimit: Whether the sample was below the analytical detection threshold (0.20 µmol; Y = below the limit, N = not below the limit) (string)
 
 
@@ -133,7 +135,7 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 
 Baumann, J. H., C. B. Bove, L. Carne, I. Gutierrez, and K. D. Castillo (2021). Two offshore coral species show greater acclimatization capacity to environmental variation than nearshore counterparts in southern Belize. Coral Reefs 40:1181–1194. DOI: 10.1007/s00338-021-02124-8
 
-Becker, D. M., H. M. Putnam, D. E. Burkepile, T. C. Adam, R. Vega Thurber, and N. J. Silbiger (2021). Chronic low-level nutrient enrichment benefits coral thermal performance in a fore reef habitat. Coral Reefs 40:1637–1655. DOI: 10.1007/s00338-021-02155-1
+Becker, D. M., H. M. Putnam, D. E. Burkepile, T. C. Adam, R. Vega Thurber, and N. J. Silbiger (2021). Chronic low-level nutrient enrichment benefits coral thermal performance in a fore reef habitat. Coral Reefs 40:1637–1655. DOI: 10.1007/s00338-021-02138-2
 
 Masuko, T., A. Minami, N. Iwasaki, T. Majima, S.-I. Nishimura, and Y. C. Lee (2005). Carbohydrate analysis by a phenol–sulfuric acid method in microplate format. Analytical Biochemistry 339:69–72. DOI: 10.1016/j.ab.2004.12.001
 
