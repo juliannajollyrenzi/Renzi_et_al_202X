@@ -39,7 +39,7 @@ Backup email: julianna.renzi@gmail.com
 
 ## Dataset Overview
 
-This dataset contains the data and code required to replicate analyses in Renzi et al. (in prep). This dataset was collected as part of a 13-month long experiment in Moorea, French Polynesia examining the effects of nutrient enrichment on coral mutualists and coral health, which ran from 2021-2022. In the experiment we exposed *Pocillopora* coral colonies (~25 cm diameter) to one of four treatments:
+This dataset contains the data and code required to replicate analyses in Renzi et al. (in review). This dataset was collected as part of a 13-month long experiment in Moorea, French Polynesia examining the effects of nutrient enrichment on coral mutualists and coral health, which ran from 2021-2022. In the experiment we exposed *Pocillopora* coral colonies (~25 cm diameter) to one of four treatments:
 
 | Treatment        | Description           | Number of coral colonies  |
 | ------------- |:-------------:| -----:|
@@ -60,7 +60,7 @@ All research was based out of the University of California Gump Research Station
 
 Official citation forthcoming
 
-Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph Curtis, Emma Holm-Olsen, Craig W. Osenberg, and Deron E. Burkepile. Fish and crab mutualists mitigate the adverse effects of nutrient enrichment on corals.
+Julianna J. Renzi, Adrian C. Stier, Alexander Primo, Joseph S. Curtis, Emma Holm-Olsen, Craig W. Osenberg, and Deron E. Burkepile. Fish and crab mutualists mitigate the adverse effects of nutrient enrichment on corals.
 
 ### Acknowledgements
 
@@ -93,7 +93,7 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 
 **Description:** Information about coral colonies (e.g., volume, block, treatment) as well as information on key exosymbionts associated with that colony. Key exosymbionts include: 
 - *Trapezia bidentata*, the mutualistic crab we used in experimental treatments (we surveyed abundances of *T. bidentata* after ~1 month and 13 months of experimental treatments)
-- *Dascyllus flavicaudus*, a coral mutaulist associated with improved oxygenation, reduced sedimentation, and beneficial nutrient excretions 
+- *Dascyllus flavicaudus*, a coral mutualist associated with improved oxygenation, reduced sedimentation, and beneficial nutrient excretions 
 - *Galeropsis monodonta*, a coral parasite that feeds on *Pocillopora* coral tissue
 
 #### Variables
@@ -106,7 +106,7 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 * coral_vol_cm3: Volume of the coral colony in cubic centimeters, approximated using the equation for the volume of an ellipsoid (numeric)
 * tissue_loss_5_percent: Approximate percent of a coral colony that experienced tissue loss at the end of 13 months. Estimates were made visually to the nearest 5% (integer)
 * tissue_loss_binary: Whether a coral experienced any visible tissue loss (1) or not (0) (binary, 0 or 1)
-* tbiden_1_month: The number of large (carapace >= 8 mm) *T. bidentata* on corals after 1 month of the experiment (integer)
+* tbiden_1_month: The number of large (carapace >= 8 mm) *T. bidentata* on corals after ~1 month (5 weeks) of the experiment (integer)
 * tbiden_13_month: The number of large (carapace >= 8 mm) *T. bidentata* on corals at the end of the experiment (integer)
 * gmono_abundance: The abundance of *G. monodonta* on a coral at the end of 13 months (integer)
 * gmono_density_per_1000cm3: The abundance of *G. monodonta* on a coral at the end of 13 months divided by coral_vol_cm3 and multiplied by 1,000 (numeric)
@@ -122,8 +122,8 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 #### Variables
 
 * coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
-* protein_change: The difference between the final and starting protein content of a coral colony (numeric)
-* carb_change: The difference between the final and starting carbohydrate content of a coral colony (numeric)
+* protein_change: The difference between the final and starting protein content of a coral colony in percentage points (numeric)
+* carb_change: The difference between the final and starting carbohydrate content of a coral colony in percentage points (numeric)
 * endosym_percent_change: The percent change in endosymbiont density over the course of the experiment (numeric)
 * sa_cm2_initial: The surface area (${cm}^{2}$) of the coral fragment used for physiology metrics at the start of the experiment (numeric)
 * sa_cm2_final: The surface area (${cm}^{2}$) of the coral fragment used for physiology metrics at the end of the experiment (numeric)
@@ -139,7 +139,7 @@ This work was funded through a Schmidt Family Foundation Accelerator Award, Nati
 * coral_id: Unique coral colony identifier used in the experiment. Coral identifiers range from 1-40 and are consistent across datasets (numeric; 1-40)
 * timepoint: Whether the water sample is from 4 days (timepoint = 1) or 1 month (timepoint = 2) after nutrients addition (integer/factor)
 * nitrite_nitrate_uM: Concentration of nitrate + nitrite in seawater in µM (numeric)
-* nitrite_nitrate_belowlimit: Whether the sample was below the analytical detection threshold (0.20 µmol; Y = below the limit, N = not below the limit) (string)
+* nitrite_nitrate_belowlimit: Whether the sample was below the analytical detection threshold (0.20 µM; Y = below the limit, N = not below the limit) (string)
 
 
 ### Citations

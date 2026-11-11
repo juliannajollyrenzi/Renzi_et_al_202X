@@ -198,7 +198,7 @@ total_abund %>%
 Save
 
 ```{r plot total abundance differences}
-cairo_pdf(here("figures", "total_macrosymbiont_density.pdf"), height = 2, width = 3.5)
+cairo_pdf(here("figures", "Figure S3.pdf"), height = 2, width = 3.5)
 
 plt.abund
 
